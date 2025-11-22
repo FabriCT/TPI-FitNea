@@ -1,8 +1,13 @@
 package Aplicacion;
 
-public class GimanasioApp {
+import java.util.Scanner;
+
+public class GimnasioApp {
+
+    private static final Scanner entrada = new Scanner(System.in);
 
     public static void main(String[] args) {
+        // Ya no cargamos datos de demostración
         mostrarMenuPrincipal();
     }
 
