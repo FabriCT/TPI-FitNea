@@ -15,9 +15,10 @@ public class GimnasioApp {
     private static final Scanner entrada = new Scanner(System.in);
     private static final ServicioGimnasio servicio = new ServicioGimnasio();
 
-    static void main() {
+    public static void main(String[] args) {
         mostrarMenuPrincipal();
     }
+
 
     private static void mostrarMenuPrincipal() {
         System.out.println("\n=====  GIMNASIO FITNEA  =====");
@@ -199,6 +200,8 @@ public class GimnasioApp {
             default -> System.out.println("Opción inválida.");
         }
     }
+
+    // ======== SOCIOS ========
 
     private static void agregarSocio() {
         System.out.print("DNI: ");
