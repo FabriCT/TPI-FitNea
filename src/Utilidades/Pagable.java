@@ -1,4 +1,5 @@
 package Utilidades;
 
-public class Pagable {
+public interface Pagable {
+    double calcularCuota();
 }
