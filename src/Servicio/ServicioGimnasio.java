@@ -26,11 +26,10 @@ public class ServicioGimnasio {
 
 
     public Socio agregarSocio(String dni, String nombre, String apellido,
-                              String telefono, String correoElectronico,
-                              String tipoMembresia, double peso, double altura) {
+                              String telefono, String correoElectronico, {
 
         Socio socio = new Socio(dni, nombre, apellido, telefono, correoElectronico,
-                siguienteIdSocio++, tipoMembresia, LocalDate.now(), true, peso, altura);
+                siguienteIdSocio++, tipoMembresia, LocalDate.now(), true);
         socios.add(socio);
         return socio;
     }
@@ -68,14 +67,6 @@ public class ServicioGimnasio {
         Collections.sort(socios);
         return socios;
     }
-
-    public void modificarSocioPesoAltura(int idSocio, double nuevoPeso, double nuevaAltura)
-            throws ExcepcionSocioNoEncontrado {
-        Socio socio = buscarSocioPorId(idSocio);
-        socio.setPeso(nuevoPeso);
-        socio.setAltura(nuevaAltura);
-    }
-
 
     public Entrenador agregarEntrenador(String dni, String nombre, String apellido,
                                         String telefono, String correoElectronico,
