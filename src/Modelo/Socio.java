@@ -8,11 +8,11 @@ import java.util.Objects;
 public class Socio extends Persona implements Pagable, Comparable<Socio> {
 
     private int idSocio;
-    private String tipoMembresia; // REGULAR, PREMIUM
+    private String tipoMembresia;
     private LocalDate fechaAlta;
     private boolean activo;
-    private double peso;   // kg
-    private double altura; // metros
+    private double peso;
+    private double altura;
 
     public Socio() {
     }
@@ -65,7 +65,6 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     }
 
     public boolean tieneCuotaAlDia() {
-        // Por simplicidad usamos "activo" como indicador
         return activo;
     }
 
