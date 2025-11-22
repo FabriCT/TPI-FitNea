@@ -11,26 +11,19 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     private String tipoMembresia;
     private LocalDate fechaAlta;
     private boolean activo;
-    private double peso;
-    private double altura;
 
     public Socio() {
     }
 
     public Socio(String dni, String nombre, String apellido, String telefono, String correoElectronico,
                  int idSocio, String tipoMembresia, LocalDate fechaAlta,
-                 boolean activo, double peso, double altura) {
+                 boolean activo) {
         super(dni, nombre, apellido, telefono, correoElectronico);
         this.idSocio = idSocio;
         this.tipoMembresia = tipoMembresia;
         this.fechaAlta = fechaAlta;
         this.activo = activo;
-        this.peso = peso;
-        this.altura = altura;
     }
-
-    public String getNombre () {return super.getNombre();}
-    public void setNombre (String nombre) {super.setNombre(nombre);}
 
     public int getIdSocio() { return idSocio; }
     public void setIdSocio(int idSocio) { this.idSocio = idSocio; }
@@ -44,16 +37,6 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
 
-    public double getPeso() { return peso; }
-    public void setPeso(double peso) { this.peso = peso; }
-
-    public double getAltura() { return altura; }
-    public void setAltura(double altura) { this.altura = altura; }
-
-    public double calcularIMC() {
-        if (altura <= 0) return 0;
-        return peso / (altura * altura);
-    }
 
     @Override
     public double calcularCuota() {
@@ -91,8 +74,6 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
                 "id=" + idSocio +
                 ", nombre='" + getNombre() + " " + getApellido() + '\'' +
                 ", membresia='" + tipoMembresia + '\'' +
-                ", activo=" + activo +
-                ", IMC=" + String.format("%.2f", calcularIMC()) +
-                '}';
+                ", activo=" + activo + '}';
     }
 }

@@ -219,11 +219,6 @@ public class GimnasioApp {
 
         String tipoMembresia = leerTipoMembresia();
 
-        double peso = leerDoublePositivo("Peso (kg): ");
-        double altura = leerDoublePositivo("Altura (m): ");
-
-        Socio socio = servicio.agregarSocio(dni, nombre, apellido, telefono, email,
-                tipoMembresia, peso, altura);
 
         DecimalFormat df = new DecimalFormat("#0.00");
         double imc = 0;
@@ -233,7 +228,6 @@ public class GimnasioApp {
                 + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
                 + (apellido.isEmpty() ? "" : " " + apellido)
                 + ", Membresia: " + (tipoMembresia.isEmpty() ? "-" : tipoMembresia)
-                + ", IMC: " + df.format(imc) + " (Peso: " + df.format(peso) + " kg, Altura: " + df.format(altura) + " m)"
                 + ", Estado: " + estado);
     }
 
@@ -249,24 +243,13 @@ public class GimnasioApp {
             String nombre = obtenerStringPorMetodos(s, "getNombre", "nombre");
             String apellido = obtenerStringPorMetodos(s, "getApellido", "apellido");
             String membresia = obtenerStringPorMetodos(s, "getTipoMembresia", "getMembresia", "tipoMembresia", "membresia");
-            double peso = obtenerDoublePorMetodos(s, "getPeso", "peso");
-            double altura = obtenerDoublePorMetodos(s, "getAltura", "altura");
 
-            double imc = 0.0;
-            try {
-                imc = s.calcularIMC();
-            } catch (Exception ignored) {}
-
-            String imcStr = df.format(imc);
-            String pesoStr = df.format(peso);
-            String alturaStr = df.format(altura);
             String estado = obtenerEstado(s);
 
             System.out.println("Socio: DNI: " + (dni.isEmpty() ? "-" : dni)
                     + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
                     + (apellido.isEmpty() ? "" : " " + apellido)
                     + ", Membresia: " + (membresia.isEmpty() ? "-" : membresia)
-                    + ", IMC: " + imcStr + " (Peso: " + pesoStr + " kg, Altura: " + alturaStr + " m)"
                     + ", Estado: " + estado);
         }
     }
@@ -287,16 +270,11 @@ public class GimnasioApp {
         }
 
         DecimalFormat df = new DecimalFormat("#0.00");
-        double pesoActual = obtenerDoublePorMetodos(s, "getPeso", "peso");
-        double alturaActual = obtenerDoublePorMetodos(s, "getAltura", "altura");
         String nombre = obtenerStringPorMetodos(s, "getNombre", "nombre");
         String apellido = obtenerStringPorMetodos(s, "getApellido", "apellido");
         System.out.println("Socio encontrado: DNI: " + (dni.isEmpty() ? "-" : dni)
                 + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre) + (apellido.isEmpty() ? "" : " " + apellido));
-        System.out.println("Peso actual: " + df.format(pesoActual) + " kg, Altura actual: " + df.format(alturaActual) + " m");
 
-        double nuevoPeso = leerDoublePositivo("Nuevo peso (kg): ");
-        double nuevaAltura = leerDoublePositivo("Nueva altura (m): ");
 
         int id = obtenerIdPorMetodos(s, "getId", "getIdSocio", "id", "getId_usuario");
         if (id == -1) {
@@ -304,12 +282,6 @@ public class GimnasioApp {
             return;
         }
 
-        try {
-            servicio.modificarSocioPesoAltura(id, nuevoPeso, nuevaAltura);
-            System.out.println("Socio modificado correctamente.");
-        } catch (ExcepcionSocioNoEncontrado e) {
-            System.out.println(e.getMessage());
-        }
     }
 
     private static void eliminarSocio() {
