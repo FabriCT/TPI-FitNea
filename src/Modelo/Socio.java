@@ -29,6 +29,9 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
         this.altura = altura;
     }
 
+    public String getNombre () {return super.getNombre();}
+    public void setNombre (String nombre) {super.setNombre(nombre);}
+
     public int getIdSocio() { return idSocio; }
     public void setIdSocio(int idSocio) { this.idSocio = idSocio; }
 
