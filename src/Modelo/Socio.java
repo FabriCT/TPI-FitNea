@@ -11,22 +11,18 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     private String tipoMembresia;
     private LocalDate fechaAlta;
     private boolean activo;
-    private double peso;
-    private double altura;
 
     public Socio() {
     }
 
     public Socio(String dni, String nombre, String apellido, String telefono, String correoElectronico,
                  int idSocio, String tipoMembresia, LocalDate fechaAlta,
-                 boolean activo, double peso, double altura) {
+                 boolean activo) {
         super(dni, nombre, apellido, telefono, correoElectronico);
         this.idSocio = idSocio;
         this.tipoMembresia = tipoMembresia;
         this.fechaAlta = fechaAlta;
         this.activo = activo;
-        this.peso = peso;
-        this.altura = altura;
     }
 
     public int getIdSocio() { return idSocio; }
@@ -41,20 +37,10 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
 
-    public double getPeso() { return peso; }
-    public void setPeso(double peso) { this.peso = peso; }
-
-    public double getAltura() { return altura; }
-    public void setAltura(double altura) { this.altura = altura; }
-
-    public double calcularIMC() {
-        if (altura <= 0) return 0;
-        return peso / (altura * altura);
-    }
 
     @Override
     public double calcularCuota() {
-        Double cuotaBase = 30000.0;
+        double cuotaBase = 30000.0;
         if ("PREMIUM".equalsIgnoreCase(tipoMembresia)) {
             cuotaBase = cuotaBase * 1.5;
         }
@@ -88,8 +74,6 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
                 "id=" + idSocio +
                 ", nombre='" + getNombre() + " " + getApellido() + '\'' +
                 ", membresia='" + tipoMembresia + '\'' +
-                ", activo=" + activo +
-                ", IMC=" + String.format("%.2f", calcularIMC()) +
-                '}';
+                ", activo=" + activo + '}';
     }
 }

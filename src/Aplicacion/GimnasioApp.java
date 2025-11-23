@@ -3,12 +3,15 @@ package Aplicacion;
 import Excepciones.ExcepcionSocioNoEncontrado;
 import Modelo.Entrenador;
 import Modelo.Socio;
+import Modelo.Pago;
 import Servicio.ServicioGimnasio;
+
 
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Scanner;
+
 
 public class GimnasioApp {
 
@@ -24,11 +27,9 @@ public class GimnasioApp {
         System.out.println("\n=====  GIMNASIO FITNEA  =====");
         System.out.println("1. Gestión de socios");
         System.out.println("2. Gestión de entrenadores");
-        System.out.println("3. Gestión de clases grupales");
-        System.out.println("4. Registrar asistencia");
-        System.out.println("5. Registrar pago de cuota");
-        System.out.println("6. Reportes");
-        System.out.println("7. Ver grilla de horarios");
+        System.out.println("3. Registrar pago de cuota");
+        System.out.println("4. Reportes");
+        System.out.println("5. Ver grilla de horarios");
         System.out.println("0. Salir");
         System.out.print("Seleccione una opción: ");
 
@@ -37,6 +38,7 @@ public class GimnasioApp {
         switch (opcion) {
             case 1 -> menuSocios();
             case 2 -> menuEntrenadores();
+            case 3 -> registrarPago();
             case 0 -> {
                 System.out.println("Saliendo del sistema...");
                 return;
@@ -184,8 +186,7 @@ public class GimnasioApp {
         System.out.println("\n--- Gestión de socios ---");
         System.out.println("1. Agregar socio");
         System.out.println("2. Listar socios");
-        System.out.println("3. Modificar peso/altura de socio");
-        System.out.println("4. Eliminar socio");
+        System.out.println("3. Eliminar socio");
         System.out.println("0. Volver");
         System.out.print("Opción: ");
 
@@ -194,8 +195,7 @@ public class GimnasioApp {
         switch (opcion) {
             case 1 -> agregarSocio();
             case 2 -> listarSocios();
-            case 3 -> modificarSocio();
-            case 4 -> eliminarSocio();
+            case 3 -> eliminarSocio();
             case 0 -> { }
             default -> System.out.println("Opción inválida.");
         }
@@ -206,37 +206,30 @@ public class GimnasioApp {
     private static void agregarSocio() {
         System.out.print("DNI: ");
         String dni = entrada.nextLine();
-
         System.out.print("Nombre: ");
         String nombre = entrada.nextLine();
-
         System.out.print("Apellido: ");
         String apellido = entrada.nextLine();
-
         System.out.print("Numero Telefonico: ");
         String telefono = entrada.nextLine();
-
         System.out.print("Email: ");
         String email = entrada.nextLine();
-
         String tipoMembresia = leerTipoMembresia();
 
-        double peso = leerDoublePositivo("Peso (kg): ");
-        double altura = leerDoublePositivo("Altura (m): ");
+        try {
+            Socio socio = servicio.agregarSocio(dni, nombre, apellido, telefono, email, tipoMembresia);
 
-        Socio socio = servicio.agregarSocio(dni, nombre, apellido, telefono, email,
-                tipoMembresia, peso, altura);
+            String estado = obtenerEstado(socio);
 
-        DecimalFormat df = new DecimalFormat("#0.00");
-        double imc = 0;
-        try { imc = socio.calcularIMC(); } catch (Exception ignored) {}
-        String estado = obtenerEstado(socio);
-        System.out.println("Socio: DNI: " + (dni.isEmpty() ? "-" : dni)
-                + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
-                + (apellido.isEmpty() ? "" : " " + apellido)
-                + ", Membresia: " + (tipoMembresia.isEmpty() ? "-" : tipoMembresia)
-                + ", IMC: " + df.format(imc) + " (Peso: " + df.format(peso) + " kg, Altura: " + df.format(altura) + " m)"
-                + ", Estado: " + estado);
+            System.out.println("Socio: DNI: " + (dni.isEmpty() ? "-" : dni)
+                    + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
+                    + (apellido.isEmpty() ? "" : " " + apellido)
+                    + ", Membresia: " + (tipoMembresia.isEmpty() ? "-" : tipoMembresia)
+                    + ", Estado: " + estado);
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     private static void listarSocios() {
@@ -251,24 +244,13 @@ public class GimnasioApp {
             String nombre = obtenerStringPorMetodos(s, "getNombre", "nombre");
             String apellido = obtenerStringPorMetodos(s, "getApellido", "apellido");
             String membresia = obtenerStringPorMetodos(s, "getTipoMembresia", "getMembresia", "tipoMembresia", "membresia");
-            double peso = obtenerDoublePorMetodos(s, "getPeso", "peso");
-            double altura = obtenerDoublePorMetodos(s, "getAltura", "altura");
 
-            double imc = 0.0;
-            try {
-                imc = s.calcularIMC();
-            } catch (Exception ignored) {}
-
-            String imcStr = df.format(imc);
-            String pesoStr = df.format(peso);
-            String alturaStr = df.format(altura);
             String estado = obtenerEstado(s);
 
             System.out.println("Socio: DNI: " + (dni.isEmpty() ? "-" : dni)
                     + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
                     + (apellido.isEmpty() ? "" : " " + apellido)
                     + ", Membresia: " + (membresia.isEmpty() ? "-" : membresia)
-                    + ", IMC: " + imcStr + " (Peso: " + pesoStr + " kg, Altura: " + alturaStr + " m)"
                     + ", Estado: " + estado);
         }
     }
@@ -289,16 +271,11 @@ public class GimnasioApp {
         }
 
         DecimalFormat df = new DecimalFormat("#0.00");
-        double pesoActual = obtenerDoublePorMetodos(s, "getPeso", "peso");
-        double alturaActual = obtenerDoublePorMetodos(s, "getAltura", "altura");
         String nombre = obtenerStringPorMetodos(s, "getNombre", "nombre");
         String apellido = obtenerStringPorMetodos(s, "getApellido", "apellido");
         System.out.println("Socio encontrado: DNI: " + (dni.isEmpty() ? "-" : dni)
                 + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre) + (apellido.isEmpty() ? "" : " " + apellido));
-        System.out.println("Peso actual: " + df.format(pesoActual) + " kg, Altura actual: " + df.format(alturaActual) + " m");
 
-        double nuevoPeso = leerDoublePositivo("Nuevo peso (kg): ");
-        double nuevaAltura = leerDoublePositivo("Nueva altura (m): ");
 
         int id = obtenerIdPorMetodos(s, "getId", "getIdSocio", "id", "getId_usuario");
         if (id == -1) {
@@ -306,12 +283,6 @@ public class GimnasioApp {
             return;
         }
 
-        try {
-            servicio.modificarSocioPesoAltura(id, nuevoPeso, nuevaAltura);
-            System.out.println("Socio modificado correctamente.");
-        } catch (ExcepcionSocioNoEncontrado e) {
-            System.out.println(e.getMessage());
-        }
     }
 
     private static void eliminarSocio() {
@@ -470,35 +441,26 @@ public class GimnasioApp {
         System.out.print("Ingrese DNI del entrenador a modificar: ");
         String dni = entrada.nextLine();
         Entrenador e = buscarEntrenadorPorDni(dni);
+
         if (e == null) {
             System.out.println("No se encontró el entrenador. Volviendo a gestión de entrenadores.");
             return;
         }
 
+        // Mostrar datos actuales
         String nombre = obtenerStringPorMetodos(e, "getNombre", "nombre");
         String apellido = obtenerStringPorMetodos(e, "getApellido", "apellido");
         double salarioActual = obtenerDoublePorMetodos(e, "getSalario", "salario");
         DecimalFormat df = new DecimalFormat("#0.00");
-        System.out.println("Entrenador encontrado: DNI: " + (dni.isEmpty() ? "-" : dni)
-                + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre) + (apellido.isEmpty() ? "" : " " + apellido));
+
+        System.out.println("Entrenador encontrado: " + nombre + " " + apellido);
         System.out.println("Salario actual: " + df.format(salarioActual) + " $");
 
         double nuevoSalario = leerDoublePositivo("Nuevo salario: ");
-        try {
-            Method setter = e.getClass().getMethod("setSalario", double.class);
-            setter.invoke(e, nuevoSalario);
-            System.out.println("Salario actualizado correctamente.");
-            return;
-        } catch (Exception ignored) {}
 
-        try {
-            Method setter = e.getClass().getMethod("setSalario", Double.class);
-            setter.invoke(e, nuevoSalario);
-            System.out.println("Salario actualizado correctamente.");
-            return;
-        } catch (Exception ignored) {}
+        e.setSalario(nuevoSalario);
 
-        System.out.println("No se pudo modificar el salario (falta método setSalario en Entrenador).");
+        System.out.println("Salario actualizado correctamente.");
     }
 
     private static void eliminarEntrenador() {
@@ -518,19 +480,11 @@ public class GimnasioApp {
 
 
         int id = obtenerIdPorMetodos(e, "getId", "getIdEntrenador", "id", "getId_usuario");
+
         if (id != -1) {
             try {
-                Method m = servicio.getClass().getMethod("eliminarEntrenador", int.class);
-                m.invoke(servicio, id);
+                servicio.eliminarEntrenador(id);
                 System.out.println("Entrenador eliminado correctamente.");
-            } catch (NoSuchMethodException ex) {
-
-                try {
-                    servicio.eliminarEntrenador(id);
-                    System.out.println("Entrenador eliminado correctamente.");
-                } catch (Exception ex2) {
-                    System.out.println("Error al eliminar el entrenador: " + ex2.getMessage());
-                }
             } catch (Exception ex) {
                 System.out.println("Error al eliminar el entrenador: " + ex.getMessage());
             }
@@ -552,5 +506,56 @@ public class GimnasioApp {
         }
 
         System.out.println("No se pudo eliminar el entrenador: no se encontró id interno ni método de eliminación por DNI en ServicioGimnasio.");
+    }
+
+    // ======== REPORTES ========
+
+    private static void registrarPago() {
+        System.out.println("\n--- Registrar Pago de Cuota ---");
+
+        System.out.print("Ingrese DNI del socio: ");
+        String dni = entrada.nextLine();
+
+        Socio socio = buscarSocioPorDni(dni);
+
+        if (socio == null) {
+            System.out.println("Error: No se encontró el socio con DNI " + dni + ".");
+            return;
+        }
+
+        double montoCuota = 0;
+        try {
+            Method m = socio.getClass().getMethod("calcularCuota");
+            Object res = m.invoke(socio);
+            if (res instanceof Number) {
+                montoCuota = ((Number) res).doubleValue();
+            } else {
+                System.out.println("Advertencia: No se pudo calcular el monto.");
+                return;
+            }
+        } catch (Exception e) {
+            System.out.println("Error al intentar calcular la cuota.");
+            return;
+        }
+
+
+        System.out.print("Ingrese el mes a pagar (formato MM-AAAA): ");
+        String mesIngresado = entrada.nextLine();
+
+        System.out.println("Cuota a pagar: " + new DecimalFormat("#0.00").format(montoCuota) + " $");
+
+
+        int id = obtenerIdPorMetodos(socio, "getId", "getIdSocio");
+
+        try {
+
+            servicio.registrarPago(id, montoCuota, mesIngresado);
+
+            System.out.println("Pago del mes " + mesIngresado + " registrado exitosamente.");
+            System.out.println("El socio " + obtenerStringPorMetodos(socio, "getNombre", "nombre") + " está activo.");
+
+        } catch (Exception e) {
+            System.out.println("Error al procesar el pago: " + e.getMessage());
+        }
     }
 }
