@@ -620,5 +620,5 @@ public class GimnasioApp {
             }
         }
     }
-    }
 }
+
