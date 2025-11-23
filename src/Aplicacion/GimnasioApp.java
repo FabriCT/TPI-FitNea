@@ -204,31 +204,30 @@ public class GimnasioApp {
     private static void agregarSocio() {
         System.out.print("DNI: ");
         String dni = entrada.nextLine();
-
         System.out.print("Nombre: ");
         String nombre = entrada.nextLine();
-
         System.out.print("Apellido: ");
         String apellido = entrada.nextLine();
-
         System.out.print("Numero Telefonico: ");
         String telefono = entrada.nextLine();
-
         System.out.print("Email: ");
         String email = entrada.nextLine();
-
         String tipoMembresia = leerTipoMembresia();
 
+        try {
+            Socio socio = servicio.agregarSocio(dni, nombre, apellido, telefono, email, tipoMembresia);
 
-        DecimalFormat df = new DecimalFormat("#0.00");
-        double imc = 0;
-        try { imc = socio.calcularIMC(); } catch (Exception ignored) {}
-        String estado = obtenerEstado(socio);
-        System.out.println("Socio: DNI: " + (dni.isEmpty() ? "-" : dni)
-                + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
-                + (apellido.isEmpty() ? "" : " " + apellido)
-                + ", Membresia: " + (tipoMembresia.isEmpty() ? "-" : tipoMembresia)
-                + ", Estado: " + estado);
+            String estado = obtenerEstado(socio);
+
+            System.out.println("Socio: DNI: " + (dni.isEmpty() ? "-" : dni)
+                    + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
+                    + (apellido.isEmpty() ? "" : " " + apellido)
+                    + ", Membresia: " + (tipoMembresia.isEmpty() ? "-" : tipoMembresia)
+                    + ", Estado: " + estado);
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     private static void listarSocios() {
@@ -440,35 +439,26 @@ public class GimnasioApp {
         System.out.print("Ingrese DNI del entrenador a modificar: ");
         String dni = entrada.nextLine();
         Entrenador e = buscarEntrenadorPorDni(dni);
+
         if (e == null) {
             System.out.println("No se encontró el entrenador. Volviendo a gestión de entrenadores.");
             return;
         }
 
+        // Mostrar datos actuales
         String nombre = obtenerStringPorMetodos(e, "getNombre", "nombre");
         String apellido = obtenerStringPorMetodos(e, "getApellido", "apellido");
         double salarioActual = obtenerDoublePorMetodos(e, "getSalario", "salario");
         DecimalFormat df = new DecimalFormat("#0.00");
-        System.out.println("Entrenador encontrado: DNI: " + (dni.isEmpty() ? "-" : dni)
-                + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre) + (apellido.isEmpty() ? "" : " " + apellido));
+
+        System.out.println("Entrenador encontrado: " + nombre + " " + apellido);
         System.out.println("Salario actual: " + df.format(salarioActual) + " $");
 
         double nuevoSalario = leerDoublePositivo("Nuevo salario: ");
-        try {
-            Method setter = e.getClass().getMethod("setSalario", double.class);
-            setter.invoke(e, nuevoSalario);
-            System.out.println("Salario actualizado correctamente.");
-            return;
-        } catch (Exception ignored) {}
 
-        try {
-            Method setter = e.getClass().getMethod("setSalario", Double.class);
-            setter.invoke(e, nuevoSalario);
-            System.out.println("Salario actualizado correctamente.");
-            return;
-        } catch (Exception ignored) {}
+        e.setSalario(nuevoSalario);
 
-        System.out.println("No se pudo modificar el salario (falta método setSalario en Entrenador).");
+        System.out.println("Salario actualizado correctamente.");
     }
 
     private static void eliminarEntrenador() {
@@ -488,19 +478,12 @@ public class GimnasioApp {
 
 
         int id = obtenerIdPorMetodos(e, "getId", "getIdEntrenador", "id", "getId_usuario");
+
         if (id != -1) {
             try {
-                Method m = servicio.getClass().getMethod("eliminarEntrenador", int.class);
-                m.invoke(servicio, id);
+                // Llamada directa, sin vueltas
+                servicio.eliminarEntrenador(id);
                 System.out.println("Entrenador eliminado correctamente.");
-            } catch (NoSuchMethodException ex) {
-
-                try {
-                    servicio.eliminarEntrenador(id);
-                    System.out.println("Entrenador eliminado correctamente.");
-                } catch (Exception ex2) {
-                    System.out.println("Error al eliminar el entrenador: " + ex2.getMessage());
-                }
             } catch (Exception ex) {
                 System.out.println("Error al eliminar el entrenador: " + ex.getMessage());
             }
