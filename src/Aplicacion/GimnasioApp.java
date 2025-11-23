@@ -508,6 +508,7 @@ public class GimnasioApp {
 
         System.out.println("No se pudo eliminar el entrenador: no se encontró id interno ni método de eliminación por DNI en ServicioGimnasio.");
     }
+    // === REGISTRAR LOS PAGOS ====
 
     private static void registrarPago() {
         System.out.println("\n--- Registrar Pago de Cuota ---");
