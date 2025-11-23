@@ -2,7 +2,6 @@ package Modelo;
 
 import java.time.LocalDate;
 
-
 public class Pago {
 
     private int idPago;

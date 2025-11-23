@@ -50,45 +50,6 @@ public class ServicioGimnasio {
         Collections.sort(socios);
         return socios;
     }
-    //------MEMBRESIAS------
-    public List<Socio> buscarMembresiasPorVencer(int dias) {
-        List<Socio> resultado = new ArrayList<>();
-        LocalDate hoy = LocalDate.now();
-        LocalDate limite = hoy.plusDays(dias);
-
-        for (Socio s : socios) {
-            LocalDate venc = s.getFechaVencimiento();
-            if (venc != null && !venc.isBefore(hoy) && !venc.isAfter(limite)) {
-                resultado.add(s);
-            }
-        }
-        return resultado;
-    }
-
-    public List<Socio> buscarSociosConMora() {
-        List<Socio> resultado = new ArrayList<>();
-        LocalDate hoy = LocalDate.now();
-
-        for (Socio s : socios) {
-            LocalDate venc = s.getFechaVencimiento();
-            if (venc != null && venc.isBefore(hoy)) {
-                resultado.add(s);
-            }
-        }
-        return resultado;
-    }
-
-    public List<Socio> buscarSociosActivos() {
-        List<Socio> resultado = new ArrayList<>();
-        for (Socio s : socios) {
-            if (s.isActivo() && s.tieneCuotaAlDia()) {
-                resultado.add(s);
-            }
-        }
-        return resultado;
-    }
-
-    // --- MÉTODOS PARA ENTRENADORES ---
 
     public Entrenador agregarEntrenador(String dni, String nombre, String apellido,
                                         String telefono, String correoElectronico,
