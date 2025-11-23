@@ -40,6 +40,8 @@ public class GimnasioApp {
             case 1 -> menuSocios();
             case 2 -> menuEntrenadores();
             case 3 -> registrarPago();
+            case 4 -> menuReportes();
+            case 5 -> mostrarGrillaHorarios();
             case 0 -> {
                 System.out.println("Saliendo del sistema...");
                 return;
@@ -48,6 +50,9 @@ public class GimnasioApp {
         }
 
         mostrarMenuPrincipal();
+    }
+
+    private static void mostrarGrillaHorarios() {
     }
 
     private static int leerEnteroSeguro() {
