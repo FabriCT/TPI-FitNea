@@ -73,7 +73,7 @@ public class ServicioGimnasio {
         Collections.sort(socios);
         return socios;
     }
-
+//------MEMBRESIAS------
     public List<Socio> buscarMembresiasPorVencer(int dias) {
         List<Socio> resultado = new ArrayList<>();
         LocalDate hoy = LocalDate.now();
