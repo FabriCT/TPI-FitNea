@@ -10,7 +10,6 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     private int idSocio;
     private String tipoMembresia;
     private LocalDate fechaAlta;
-    private LocalDate fechaVencimiento;
     private boolean activo;
     private Rutina rutina;
 
@@ -24,7 +23,6 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
         this.idSocio = idSocio;
         this.tipoMembresia = tipoMembresia;
         this.fechaAlta = fechaAlta;
-        this.fechaVencimiento = fechaAlta.plusDays(30);
         this.activo = activo;
     }
 
@@ -37,14 +35,11 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     public LocalDate getFechaAlta() { return fechaAlta; }
     public void setFechaAlta(LocalDate fechaAlta) { this.fechaAlta = fechaAlta; }
 
-    public LocalDate getFechaVencimiento() { return fechaVencimiento; }
-    public void setFechaVencimiento(LocalDate fechaVencimiento) { this.fechaVencimiento = fechaVencimiento; }
-
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
 
     public Rutina getRutina() { return rutina; }
-    
+
     public void setRutina(Rutina rutina) { this.rutina = rutina; }
 
     @Override
@@ -57,8 +52,7 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     }
 
     public boolean tieneCuotaAlDia() {
-        if (fechaVencimiento == null) return false;
-        return !fechaVencimiento.isBefore(LocalDate.now());
+        return activo;
     }
 
     @Override

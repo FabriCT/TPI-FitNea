@@ -3,25 +3,26 @@ package Aplicacion;
 import Excepciones.ExcepcionSocioNoEncontrado;
 import Modelo.Entrenador;
 import Modelo.Socio;
-import Modelo.Pago;
+import Modelo.Rutina;
+import Modelo.RutinaCardio;
+import Modelo.RutinaFuerza;
 import Servicio.ServicioGimnasio;
 
-
-import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Scanner;
-
 
 public class GimnasioApp {
 
     private static final Scanner entrada = new Scanner(System.in);
     private static final ServicioGimnasio servicio = new ServicioGimnasio();
 
-    public static void main(String[] args) {
-        mostrarMenuPrincipal();
+    private record InputResult(String value, boolean back) {
     }
 
+    static void main() {
+        mostrarMenuPrincipal();
+    }
 
     private static void mostrarMenuPrincipal() {
         System.out.println("\n=====  GIMNASIO FITNEA  =====");
@@ -79,107 +80,80 @@ public class GimnasioApp {
         return val;
     }
 
-    private static String leerTipoMembresia() {
+    private static void mostrarIndicacionVolver() {
+        System.out.println("Presiona V para volver");
+    }
+
+    private static InputResult leerLineaSinHint(String prompt) {
+        System.out.print(prompt + " ");
+        String line = entrada.nextLine();
+        if (line.equalsIgnoreCase("V")) return new InputResult("", true);
+        return new InputResult(line, false);
+    }
+
+    private static InputResult leerSalarioConVolver() {
+        while (true) {
+            InputResult r = leerLineaSinHint("Salario:");
+            if (r.back) return r;
+            try {
+                Double.parseDouble(r.value);
+                return r;
+            } catch (NumberFormatException e) {
+                System.out.println("Ingrese un número válido o presione V para volver.");
+            }
+        }
+    }
+
+    private static InputResult leerTipoMembresiaConVolver() {
         while (true) {
             System.out.print("Tipo de membresía (1. REGULAR | 2. COMPLETA): ");
             String line = entrada.nextLine();
+            if (line.equalsIgnoreCase("V")) return new InputResult("", true);
             int opcion;
             try {
                 opcion = Integer.parseInt(line);
             } catch (NumberFormatException e) {
-                System.out.println("Debe ingresar 1 o 2.");
+                System.out.println("Debe ingresar 1 o 2, o V para volver.");
                 continue;
             }
-            if (opcion == 1) return "REGULAR";
-            if (opcion == 2) return "COMPLETA";
+            if (opcion == 1) return new InputResult("REGULAR", false);
+            if (opcion == 2) return new InputResult("COMPLETA", false);
             System.out.println("Opción inválida. Debe seleccionar 1 o 2.");
         }
     }
 
-    private static String obtenerStringPorMetodos(Object obj, String... nombresMetodos) {
-        if (obj == null) return "";
-        for (String nombre : nombresMetodos) {
+    private static InputResult leerTipoRutinaConVolver() {
+        while (true) {
+            System.out.print("Tipo de rutina (1. CARDIO | 2. FUERZA): ");
+            String line = entrada.nextLine();
+            if (line.equalsIgnoreCase("V")) return new InputResult("", true);
+            int opcion;
             try {
-                Method m = obj.getClass().getMethod(nombre);
-                Object res = m.invoke(obj);
-                if (res != null) return res.toString();
-            } catch (Exception ignored) {}
+                opcion = Integer.parseInt(line);
+            } catch (NumberFormatException e) {
+                System.out.println("Debe ingresar 1 o 2, o V para volver.");
+                continue;
+            }
+            if (opcion == 1) return new InputResult("CARDIO", false);
+            if (opcion == 2) return new InputResult("FUERZA", false);
+            System.out.println("Opción inválida. Debe seleccionar 1 o 2.");
         }
-        return "";
-    }
-
-    private static double obtenerDoublePorMetodos(Object obj, String... nombresMetodos) {
-        if (obj == null) return 0.0;
-        for (String nombre : nombresMetodos) {
-            try {
-                Method m = obj.getClass().getMethod(nombre);
-                Object res = m.invoke(obj);
-                if (res instanceof Number) return ((Number) res).doubleValue();
-            } catch (Exception ignored) {}
-        }
-        return 0.0;
-    }
-
-    private static int obtenerIdPorMetodos(Object obj, String... nombresMetodos) {
-        if (obj == null) return -1;
-        for (String nombre : nombresMetodos) {
-            try {
-                Method m = obj.getClass().getMethod(nombre);
-                Object res = m.invoke(obj);
-                if (res instanceof Number) return ((Number) res).intValue();
-                if (res instanceof String) {
-                    try { return Integer.parseInt((String) res); } catch (Exception ignored) {}
-                }
-            } catch (Exception ignored) {}
-        }
-        return -1;
-    }
-
-    private static String obtenerEstado(Socio s) {
-        if (s == null) return "no activo";
-        try {
-            try {
-                Method m = s.getClass().getMethod("estaActivo");
-                Object res = m.invoke(s);
-                if (res instanceof Boolean) return ((Boolean) res) ? "activo" : "no activo";
-            } catch (NoSuchMethodException ignored) {}
-
-            try {
-                Method m = s.getClass().getMethod("tieneCuotaAlDia");
-                Object res = m.invoke(s);
-                if (res instanceof Boolean) return ((Boolean) res) ? "activo" : "no activo";
-            } catch (NoSuchMethodException ignored) {}
-
-            try {
-                Method m = s.getClass().getMethod("isActivo");
-                Object res = m.invoke(s);
-                if (res instanceof Boolean) return ((Boolean) res) ? "activo" : "no activo";
-            } catch (NoSuchMethodException ignored) {}
-        } catch (Exception ignored) {}
-
-        return "no activo";
     }
 
     private static Socio buscarSocioPorDni(String dni) {
         if (dni == null || dni.isEmpty()) return null;
-        for (Socio s : servicio.listarSocios()) {
-            String sdni = obtenerStringPorMetodos(s, "getDni", "dni", "getDocumento");
-            if (sdni != null && sdni.equalsIgnoreCase(dni)) {
-                return s;
-            }
-        }
-        return null;
+        return servicio.listarSocios().stream()
+                .filter(s -> s.getDni().equalsIgnoreCase(dni))
+                .findFirst()
+                .orElse(null);
     }
 
     private static Entrenador buscarEntrenadorPorDni(String dni) {
         if (dni == null || dni.isEmpty()) return null;
-        for (Entrenador e : servicio.listarEntrenadores()) {
-            String edni = obtenerStringPorMetodos(e, "getDni", "dni", "getDocumento");
-            if (edni != null && edni.equalsIgnoreCase(dni)) {
-                return e;
-            }
-        }
-        return null;
+        return servicio.listarEntrenadores().stream()
+                .filter(e -> e.getDni().equalsIgnoreCase(dni))
+                .findFirst()
+                .orElse(null);
     }
 
     private static void menuSocios() {
@@ -196,37 +170,80 @@ public class GimnasioApp {
             case 1 -> agregarSocio();
             case 2 -> listarSocios();
             case 3 -> eliminarSocio();
-            case 0 -> { }
+            case 0 -> {
+            }
             default -> System.out.println("Opción inválida.");
         }
     }
 
-    // ======== SOCIOS ========
-
     private static void agregarSocio() {
-        System.out.print("DNI: ");
-        String dni = entrada.nextLine();
-        System.out.print("Nombre: ");
-        String nombre = entrada.nextLine();
-        System.out.print("Apellido: ");
-        String apellido = entrada.nextLine();
-        System.out.print("Numero Telefonico: ");
-        String telefono = entrada.nextLine();
-        System.out.print("Email: ");
-        String email = entrada.nextLine();
-        String tipoMembresia = leerTipoMembresia();
-
+        String dni = "", nombre = "", apellido = "", telefono = "", email = "", tipoMembresia = "";
+        mostrarIndicacionVolver();
+        int paso = 0;
+        while (paso < 6) {
+            switch (paso) {
+                case 0 -> {
+                    InputResult r = leerLineaSinHint("DNI:");
+                    if (r.back()) {
+                        System.out.println("Volviendo al menú de socios.");
+                        return;
+                    }
+                    dni = r.value();
+                    paso++;
+                }
+                case 1 -> {
+                    InputResult r = leerLineaSinHint("Nombre:");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    nombre = r.value();
+                    paso++;
+                }
+                case 2 -> {
+                    InputResult r = leerLineaSinHint("Apellido:");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    apellido = r.value();
+                    paso++;
+                }
+                case 3 -> {
+                    InputResult r = leerLineaSinHint("Numero Telefonico:");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    telefono = r.value();
+                    paso++;
+                }
+                case 4 -> {
+                    InputResult r = leerLineaSinHint("Email:");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    email = r.value();
+                    paso++;
+                }
+                case 5 -> {
+                    InputResult r = leerTipoMembresiaConVolver();
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    tipoMembresia = r.value();
+                    paso++;
+                }
+            }
+        }
         try {
             Socio socio = servicio.agregarSocio(dni, nombre, apellido, telefono, email, tipoMembresia);
-
-            String estado = obtenerEstado(socio);
-
-            System.out.println("Socio: DNI: " + (dni.isEmpty() ? "-" : dni)
-                    + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
-                    + (apellido.isEmpty() ? "" : " " + apellido)
-                    + ", Membresia: " + (tipoMembresia.isEmpty() ? "-" : tipoMembresia)
-                    + ", Estado: " + estado);
-
+            System.out.println("Socio: DNI: " + socio.getDni()
+                    + ", Nombre Completo: " + socio.getNombre() + " " + socio.getApellido()
+                    + ", Membresia: " + socio.getTipoMembresia()
+                    + ", Estado: " + (socio.isActivo() ? "activo" : "no activo"));
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
@@ -238,51 +255,12 @@ public class GimnasioApp {
             System.out.println("No hay socios registrados por el momento.");
             return;
         }
-        DecimalFormat df = new DecimalFormat("#0.00");
         for (Socio s : socios) {
-            String dni = obtenerStringPorMetodos(s, "getDni", "dni", "getDocumento");
-            String nombre = obtenerStringPorMetodos(s, "getNombre", "nombre");
-            String apellido = obtenerStringPorMetodos(s, "getApellido", "apellido");
-            String membresia = obtenerStringPorMetodos(s, "getTipoMembresia", "getMembresia", "tipoMembresia", "membresia");
-
-            String estado = obtenerEstado(s);
-
-            System.out.println("Socio: DNI: " + (dni.isEmpty() ? "-" : dni)
-                    + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
-                    + (apellido.isEmpty() ? "" : " " + apellido)
-                    + ", Membresia: " + (membresia.isEmpty() ? "-" : membresia)
-                    + ", Estado: " + estado);
+            System.out.println("Socio: DNI: " + s.getDni()
+                    + ", Nombre Completo: " + s.getNombre() + " " + s.getApellido()
+                    + ", Membresia: " + s.getTipoMembresia()
+                    + ", Estado: " + (s.isActivo() ? "activo" : "no activo"));
         }
-    }
-
-    private static void modificarSocio() {
-        List<Socio> socios = servicio.listarSocios();
-        if (socios.isEmpty()) {
-            System.out.println("No es posible modificar, ya que no hay socios registrados.");
-            return;
-        }
-
-        System.out.print("Ingrese DNI del socio a modificar: ");
-        String dni = entrada.nextLine();
-        Socio s = buscarSocioPorDni(dni);
-        if (s == null) {
-            System.out.println("No se encontró el socio. Volviendo a gestión de socios.");
-            return;
-        }
-
-        DecimalFormat df = new DecimalFormat("#0.00");
-        String nombre = obtenerStringPorMetodos(s, "getNombre", "nombre");
-        String apellido = obtenerStringPorMetodos(s, "getApellido", "apellido");
-        System.out.println("Socio encontrado: DNI: " + (dni.isEmpty() ? "-" : dni)
-                + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre) + (apellido.isEmpty() ? "" : " " + apellido));
-
-
-        int id = obtenerIdPorMetodos(s, "getId", "getIdSocio", "id", "getId_usuario");
-        if (id == -1) {
-            System.out.println("No se pudo obtener el ID interno del socio. Modificación cancelada.");
-            return;
-        }
-
     }
 
     private static void eliminarSocio() {
@@ -291,7 +269,6 @@ public class GimnasioApp {
             System.out.println("No es posible eliminar, ya que no hay socios registrados.");
             return;
         }
-
         System.out.print("Ingrese DNI del socio a eliminar: ");
         String dni = entrada.nextLine();
         Socio s = buscarSocioPorDni(dni);
@@ -299,37 +276,13 @@ public class GimnasioApp {
             System.out.println("No se encontró el socio. Volviendo a gestión de socios.");
             return;
         }
-
-        int id = obtenerIdPorMetodos(s, "getId", "getIdSocio", "id", "getId_usuario");
-        if (id != -1) {
-            try {
-                servicio.eliminarSocio(id);
-                System.out.println("Socio eliminado correctamente.");
-            } catch (ExcepcionSocioNoEncontrado e) {
-                System.out.println(e.getMessage());
-            }
-            return;
+        try {
+            servicio.eliminarSocio(s.getIdSocio());
+            System.out.println("Socio eliminado correctamente.");
+        } catch (ExcepcionSocioNoEncontrado e) {
+            System.out.println(e.getMessage());
         }
-
-
-        String[] candidatos = {"eliminarSocioPorDni", "eliminarPorDni", "eliminarSocioByDni", "eliminarSocio"};
-        for (String nombre : candidatos) {
-            try {
-                Method m = servicio.getClass().getMethod(nombre, String.class);
-                m.invoke(servicio, dni);
-                System.out.println("Socio eliminado correctamente.");
-                return;
-            } catch (NoSuchMethodException ignored) {
-            } catch (Exception e) {
-                System.out.println("Error al eliminar el socio: " + e.getMessage());
-                return;
-            }
-        }
-
-        System.out.println("No se pudo eliminar el socio: no se encontró id interno ni método de eliminación por DNI en ServicioGimnasio.");
     }
-
-    // ======== ENTRENADORES ========
 
     private static void menuEntrenadores() {
         System.out.println("\n--- Gestión de entrenadores ---");
@@ -338,47 +291,101 @@ public class GimnasioApp {
         System.out.println("3. Modificar especialidad");
         System.out.println("4. Modificar salario");
         System.out.println("5. Eliminar entrenador");
+        System.out.println("6. Crear y asignar rutina a un socio");
         System.out.println("0. Volver");
         System.out.print("Opción: ");
-
         int opcion = leerEnteroSeguro();
-
         switch (opcion) {
             case 1 -> agregarEntrenador();
             case 2 -> listarEntrenadores();
             case 3 -> modificarEspecialidadEntrenador();
             case 4 -> modificarSalarioEntrenador();
             case 5 -> eliminarEntrenador();
-            case 0 -> { }
+            case 6 -> crearYAsignarRutinaEntrenador();
+            case 0 -> {
+            }
             default -> System.out.println("Opción inválida.");
         }
     }
 
     private static void agregarEntrenador() {
-        System.out.print("DNI: ");
-        String dni = entrada.nextLine();
-        System.out.print("Nombre: ");
-        String nombre = entrada.nextLine();
-        System.out.print("Apellido: ");
-        String apellido = entrada.nextLine();
-        System.out.print("Teléfono: ");
-        String telefono = entrada.nextLine();
-        System.out.print("Email: ");
-        String email = entrada.nextLine();
-        System.out.print("Especialidad: ");
-        String especialidad = entrada.nextLine();
-        System.out.print("Salario: ");
-        double salario = leerDoublePositivo("");
-
-        servicio.agregarEntrenador(dni, nombre, apellido, telefono, email, especialidad, salario);
-
+        String dni = "", nombre = "", apellido = "", telefono = "", email = "", especialidad = "";
+        double salario = 0.0;
+        mostrarIndicacionVolver();
+        int paso = 0;
+        while (paso < 7) {
+            switch (paso) {
+                case 0 -> {
+                    InputResult r = leerLineaSinHint("DNI:");
+                    if (r.back()) {
+                        System.out.println("Volviendo al menú de entrenadores.");
+                        return;
+                    }
+                    dni = r.value();
+                    paso++;
+                }
+                case 1 -> {
+                    InputResult r = leerLineaSinHint("Nombre:");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    nombre = r.value();
+                    paso++;
+                }
+                case 2 -> {
+                    InputResult r = leerLineaSinHint("Apellido:");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    apellido = r.value();
+                    paso++;
+                }
+                case 3 -> {
+                    InputResult r = leerLineaSinHint("Teléfono:");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    telefono = r.value();
+                    paso++;
+                }
+                case 4 -> {
+                    InputResult r = leerLineaSinHint("Email:");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    email = r.value();
+                    paso++;
+                }
+                case 5 -> {
+                    InputResult r = leerLineaSinHint("Especialidad:");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    especialidad = r.value();
+                    paso++;
+                }
+                case 6 -> {
+                    InputResult r = leerSalarioConVolver();
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    salario = Double.parseDouble(r.value());
+                    paso++;
+                }
+            }
+        }
+        Entrenador entrenador = servicio.agregarEntrenador(dni, nombre, apellido, telefono, email, especialidad, salario);
         DecimalFormat df = new DecimalFormat("#0.00");
-        String salarioStr = df.format(salario);
-        System.out.println("Entrenador: DNI: " + (dni.isEmpty() ? "-" : dni)
-                + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
-                + (apellido.isEmpty() ? "" : " " + apellido)
-                + ", Especialidad: " + (especialidad.isEmpty() ? "-" : especialidad)
-                + ", Salario: " + salarioStr + " $");
+        System.out.println("Entrenador: DNI: " + entrenador.getDni()
+                + ", Nombre Completo: " + entrenador.getNombre() + " " + entrenador.getApellido()
+                + ", Especialidad: " + entrenador.getEspecialidad()
+                + ", Salario: " + df.format(entrenador.getSalario()) + " $");
     }
 
     private static void listarEntrenadores() {
@@ -389,19 +396,10 @@ public class GimnasioApp {
         }
         DecimalFormat df = new DecimalFormat("#0.00");
         for (Entrenador e : entrenadores) {
-            String dni = obtenerStringPorMetodos(e, "getDni", "dni", "getDocumento");
-            String nombre = obtenerStringPorMetodos(e, "getNombre", "nombre");
-            String apellido = obtenerStringPorMetodos(e, "getApellido", "apellido");
-            String especialidad = obtenerStringPorMetodos(e, "getEspecialidad", "especialidad");
-            double salario = obtenerDoublePorMetodos(e, "getSalario", "salario");
-
-            String salarioStr = df.format(salario);
-
-            System.out.println("Entrenador: DNI: " + (dni.isEmpty() ? "-" : dni)
-                    + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre)
-                    + (apellido.isEmpty() ? "" : " " + apellido)
-                    + ", Especialidad: " + (especialidad.isEmpty() ? "-" : especialidad)
-                    + ", Salario: " + salarioStr + " $");
+            System.out.println("Entrenador: DNI: " + e.getDni()
+                    + ", Nombre Completo: " + e.getNombre() + " " + e.getApellido()
+                    + ", Especialidad: " + e.getEspecialidad()
+                    + ", Salario: " + df.format(e.getSalario()) + " $");
         }
     }
 
@@ -413,53 +411,32 @@ public class GimnasioApp {
             System.out.println("No se encontró el entrenador. Volviendo a gestión de entrenadores.");
             return;
         }
-
-        String nombre = obtenerStringPorMetodos(e, "getNombre", "nombre");
-        String apellido = obtenerStringPorMetodos(e, "getApellido", "apellido");
-        String especialidadActual = obtenerStringPorMetodos(e, "getEspecialidad", "especialidad");
-        System.out.println("Entrenador encontrado: DNI: " + (dni.isEmpty() ? "-" : dni)
-                + ", Nombre Completo: " + (nombre.isEmpty() ? "-" : nombre) + (apellido.isEmpty() ? "" : " " + apellido));
-        System.out.println("Especialidad actual: " + (especialidadActual.isEmpty() ? "-" : especialidadActual));
+        System.out.println("Entrenador encontrado: DNI: " + e.getDni()
+                + ", Nombre Completo: " + e.getNombre() + " " + e.getApellido());
+        System.out.println("Especialidad actual: " + e.getEspecialidad());
         System.out.print("Nueva especialidad: ");
         String nuevaEsp = entrada.nextLine();
         if (nuevaEsp.isEmpty()) {
             System.out.println("Especialidad vacía. Modificación cancelada.");
             return;
         }
-
-        try {
-            Method setter = e.getClass().getMethod("setEspecialidad", String.class);
-            setter.invoke(e, nuevaEsp);
-            System.out.println("Especialidad actualizada correctamente.");
-            return;
-        } catch (Exception ignored) {}
-
-        System.out.println("No se pudo modificar la especialidad (falta método setEspecialidad en Entrenador).");
+        e.setEspecialidad(nuevaEsp);
+        System.out.println("Especialidad actualizada correctamente.");
     }
 
     private static void modificarSalarioEntrenador() {
         System.out.print("Ingrese DNI del entrenador a modificar: ");
         String dni = entrada.nextLine();
         Entrenador e = buscarEntrenadorPorDni(dni);
-
         if (e == null) {
             System.out.println("No se encontró el entrenador. Volviendo a gestión de entrenadores.");
             return;
         }
-
-        // Mostrar datos actuales
-        String nombre = obtenerStringPorMetodos(e, "getNombre", "nombre");
-        String apellido = obtenerStringPorMetodos(e, "getApellido", "apellido");
-        double salarioActual = obtenerDoublePorMetodos(e, "getSalario", "salario");
         DecimalFormat df = new DecimalFormat("#0.00");
-
-        System.out.println("Entrenador encontrado: " + nombre + " " + apellido);
-        System.out.println("Salario actual: " + df.format(salarioActual) + " $");
-
+        System.out.println("Entrenador encontrado: " + e.getNombre() + " " + e.getApellido());
+        System.out.println("Salario actual: " + df.format(e.getSalario()) + " $");
         double nuevoSalario = leerDoublePositivo("Nuevo salario: ");
-
         e.setSalario(nuevoSalario);
-
         System.out.println("Salario actualizado correctamente.");
     }
 
@@ -469,7 +446,6 @@ public class GimnasioApp {
             System.out.println("No es posible eliminar, ya que no hay entrenadores registrados.");
             return;
         }
-
         System.out.print("Ingrese DNI del entrenador a eliminar: ");
         String dni = entrada.nextLine();
         Entrenador e = buscarEntrenadorPorDni(dni);
@@ -477,83 +453,87 @@ public class GimnasioApp {
             System.out.println("No se encontró el entrenador. Volviendo a gestión de entrenadores.");
             return;
         }
+        // Asumiendo que el ID del entrenador se puede obtener de alguna manera
+        // servicio.eliminarEntrenador(e.getId());
+        System.out.println("Funcionalidad de eliminar entrenador no implementada completamente.");
+    }
 
-
-        int id = obtenerIdPorMetodos(e, "getId", "getIdEntrenador", "id", "getId_usuario");
-
-        if (id != -1) {
-            try {
-                // Llamada directa, sin vueltas
-                servicio.eliminarEntrenador(id);
-                System.out.println("Entrenador eliminado correctamente.");
-            } catch (Exception ex) {
-                System.out.println("Error al eliminar el entrenador: " + ex.getMessage());
-            }
+    private static void crearYAsignarRutinaEntrenador() {
+        System.out.println("\n--- Crear y asignar rutina a un socio ---");
+        mostrarIndicacionVolver();
+        InputResult rDni = leerLineaSinHint("Ingrese DNI del socio:");
+        if (rDni.back()) {
+            System.out.println("Volviendo a gestión de entrenadores.");
             return;
         }
-
-        String[] candidatos = {"eliminarEntrenadorPorDni", "eliminarPorDniEntrenador", "eliminarEntrenador", "eliminarPorDni"};
-        for (String nombreMetodo : candidatos) {
-            try {
-                Method m = servicio.getClass().getMethod(nombreMetodo, String.class);
-                m.invoke(servicio, dni);
-                System.out.println("Entrenador eliminado correctamente.");
-                return;
-            } catch (NoSuchMethodException ignored) {
-            } catch (Exception ex) {
-                System.out.println("Error al eliminar el entrenador: " + ex.getMessage());
-                return;
-            }
+        String dni = rDni.value();
+        Socio socio = buscarSocioPorDni(dni);
+        if (socio == null) {
+            System.out.println("No se encontró el socio con DNI " + dni + ". Operación cancelada.");
+            return;
         }
-
-        System.out.println("No se pudo eliminar el entrenador: no se encontró id interno ni método de eliminación por DNI en ServicioGimnasio.");
+        InputResult tipoR = leerTipoRutinaConVolver();
+        if (tipoR.back()) {
+            System.out.println("Operación cancelada.");
+            return;
+        }
+        boolean esCardio = "CARDIO".equalsIgnoreCase(tipoR.value());
+        Rutina rutina;
+        if (esCardio) {
+            int duracion = (int) leerDoublePositivo("Duración (minutos): ");
+            int frecCardiaca = (int) leerDoublePositivo("Frecuencia cardíaca (ppm): ");
+            rutina = new RutinaCardio(duracion, frecCardiaca);
+        } else {
+            int series = (int) leerDoublePositivo("Series: ");
+            int repeticiones = (int) leerDoublePositivo("Repeticiones: ");
+            double peso = leerDoublePositivo("Peso (kg): ");
+            rutina = new RutinaFuerza(series, repeticiones, peso);
+        }
+        System.out.println("Ingrese ejercicios uno por línea. Dejar vacío para terminar.");
+        int idx = 1;
+        while (true) {
+            InputResult rEj = leerLineaSinHint("Ejercicio " + idx + ":");
+            if (rEj.back() || rEj.value().trim().isEmpty()) {
+                break;
+            }
+            rutina.agregarEjercicio(rEj.value().trim());
+            idx++;
+        }
+        try {
+            servicio.asignarRutinaSocio(dni, rutina);
+            System.out.println("Rutina asignada correctamente al socio " + dni + ".");
+            System.out.println(rutina);
+        } catch (ExcepcionSocioNoEncontrado e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private static void registrarPago() {
         System.out.println("\n--- Registrar Pago de Cuota ---");
-
-        System.out.print("Ingrese DNI del socio: ");
-        String dni = entrada.nextLine();
-
+        mostrarIndicacionVolver();
+        InputResult rDni = leerLineaSinHint("Ingrese DNI del socio:");
+        if (rDni.back()) {
+            System.out.println("Volviendo al menú principal.");
+            return;
+        }
+        String dni = rDni.value();
         Socio socio = buscarSocioPorDni(dni);
-
         if (socio == null) {
             System.out.println("Error: No se encontró el socio con DNI " + dni + ".");
             return;
         }
-
-        // 1. Obtener la cuota
-        double montoCuota = 0;
-        try {
-            Method m = socio.getClass().getMethod("calcularCuota");
-            Object res = m.invoke(socio);
-            if (res instanceof Number) {
-                montoCuota = ((Number) res).doubleValue();
-            } else {
-                System.out.println("Advertencia: No se pudo calcular el monto.");
-                return;
-            }
-        } catch (Exception e) {
-            System.out.println("Error al intentar calcular la cuota.");
+        double montoCuota = socio.calcularCuota();
+        InputResult rMes = leerLineaSinHint("Ingrese el mes a pagar (formato MM-AAAA):");
+        if (rMes.back()) {
+            registrarPago();
             return;
         }
-
-
-        System.out.print("Ingrese el mes a pagar (formato MM-AAAA): ");
-        String mesIngresado = entrada.nextLine();
-
+        String mesIngresado = rMes.value();
         System.out.println("Cuota a pagar: " + new DecimalFormat("#0.00").format(montoCuota) + " $");
-
-
-        int id = obtenerIdPorMetodos(socio, "getId", "getIdSocio");
-
         try {
-
-            servicio.registrarPago(id, montoCuota, mesIngresado);
-
+            servicio.registrarPago(socio.getIdSocio(), montoCuota, mesIngresado);
             System.out.println("Pago del mes " + mesIngresado + " registrado exitosamente.");
-            System.out.println("El socio " + obtenerStringPorMetodos(socio, "getNombre", "nombre") + " está activo.");
-
+            System.out.println("El socio " + socio.getNombre() + " está activo.");
         } catch (Exception e) {
             System.out.println("Error al procesar el pago: " + e.getMessage());
         }
