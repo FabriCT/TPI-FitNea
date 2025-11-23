@@ -447,7 +447,6 @@ public class GimnasioApp {
             return;
         }
 
-        // Mostrar datos actuales
         String nombre = obtenerStringPorMetodos(e, "getNombre", "nombre");
         String apellido = obtenerStringPorMetodos(e, "getApellido", "apellido");
         double salarioActual = obtenerDoublePorMetodos(e, "getSalario", "salario");
@@ -483,7 +482,6 @@ public class GimnasioApp {
 
         if (id != -1) {
             try {
-                // Llamada directa, sin vueltas
                 servicio.eliminarEntrenador(id);
                 System.out.println("Entrenador eliminado correctamente.");
             } catch (Exception ex) {
@@ -522,7 +520,6 @@ public class GimnasioApp {
             return;
         }
 
-        // 1. Obtener la cuota
         double montoCuota = 0;
         try {
             Method m = socio.getClass().getMethod("calcularCuota");
