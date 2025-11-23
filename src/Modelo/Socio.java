@@ -12,6 +12,7 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     private LocalDate fechaAlta;
     private LocalDate fechaVencimiento;
     private boolean activo;
+    private Rutina rutina;
 
     public Socio() {
     }
@@ -42,6 +43,9 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
 
+    public Rutina getRutina() { return rutina; }
+    
+    public void setRutina(Rutina rutina) { this.rutina = rutina; }
 
     @Override
     public double calcularCuota() {

@@ -101,6 +101,9 @@ public class ServicioGimnasio {
 
     // --- MÉTODOS PARA PAGOS ---
 
+    /**
+     * Registra el pago, lo guarda en la lista y activa al socio.
+     */
     public void registrarPago(int idSocio, double monto, String mesCorrespondiente) throws ExcepcionSocioNoEncontrado {
 
         Socio socio = buscarSocioPorId(idSocio);
@@ -109,16 +112,19 @@ public class ServicioGimnasio {
             throw new ExcepcionSocioNoEncontrado("Socio con ID " + idSocio + " no encontrado.");
         }
 
+        // Creamos el pago usando el mes que recibimos por parámetro (mesCorrespondiente)
         Pago nuevoPago = new Pago(
                 siguienteIdPago++,
                 socio,
-                LocalDate.now(),
+                LocalDate.now(), // La fecha real de la transacción sigue siendo HOY
                 monto,
-                mesCorrespondiente
+                mesCorrespondiente // Aquí guardamos "11-2025" o lo que escribiste
         );
 
+        // Guardamos en la lista
         this.pagos.add(nuevoPago);
 
+        // Activamos al socio
         socio.setActivo(true);
     }
 
