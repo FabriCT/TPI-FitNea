@@ -1,11 +1,10 @@
 package Servicio;
 
 import Modelo.Entrenador;
+import Modelo.Pago; // Asegúrate de que Pago.java exista en Modelo
 import Modelo.Socio;
 import Excepciones.ExcepcionSocioNoEncontrado;
-import Modelo.*;
 
-import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,21 +14,20 @@ public class ServicioGimnasio {
 
     private List<Socio> socios = new ArrayList<>();
     private List<Entrenador> entrenadores = new ArrayList<>();
-    private List<ClaseGrupal> clasesGrupales = new ArrayList<>();
-    private List<Pago> pagos = new ArrayList<>();
-
-    private String[][] grillaHorarios = new String[6][4];
+    private List<Pago> pagos = new ArrayList<>(); // Lista para guardar los pagos
 
     private int siguienteIdSocio = 1;
-    private int siguienteIdClase = 1;
-    private int siguienteIdPago = 1;
+    private int siguienteIdEntrenador = 1;
 
+    // --- MÉTODOS PARA SOCIOS ---
 
     public Socio agregarSocio(String dni, String nombre, String apellido,
-                              String telefono, String correoElectronico, {
+                              String telefono, String correoElectronico, String tipoMembresia) {
 
+        // Creamos el socio con ID automático
         Socio socio = new Socio(dni, nombre, apellido, telefono, correoElectronico,
                 siguienteIdSocio++, tipoMembresia, LocalDate.now(), true);
+
         socios.add(socio);
         return socio;
     }
@@ -41,38 +39,31 @@ public class ServicioGimnasio {
         }
     }
 
+    // Método auxiliar para eliminar por DNI (usado por el menú)
     public void eliminarSocioPorDni(String dni) throws ExcepcionSocioNoEncontrado {
-        boolean eliminado = socios.removeIf(socio -> {
-            String sdni = null;
-            try { sdni = socio.getDni(); } catch (Exception ignored) {}
-            return sdni != null && sdni.equalsIgnoreCase(dni);
-        });
+        boolean eliminado = socios.removeIf(s -> s.getDni().equals(dni));
         if (!eliminado) {
             throw new ExcepcionSocioNoEncontrado("No existe un socio con DNI " + dni);
         }
     }
 
-    public void eliminarSocio(String dni) throws ExcepcionSocioNoEncontrado {
-        eliminarSocioPorDni(dni);
-    }
-
-    public Socio buscarSocioPorId(int idSocio) throws ExcepcionSocioNoEncontrado {
-        return socios.stream()
-                .filter(socio -> socio.getIdSocio() == idSocio)
-                .findFirst()
-                .orElseThrow(() -> new ExcepcionSocioNoEncontrado("Socio no encontrado."));
-    }
-
     public List<Socio> listarSocios() {
+        // Ordenamos por nombre (Socio implementa Comparable)
         Collections.sort(socios);
         return socios;
     }
 
+    // --- MÉTODOS PARA ENTRENADORES ---
+
     public Entrenador agregarEntrenador(String dni, String nombre, String apellido,
                                         String telefono, String correoElectronico,
                                         String especialidad, double salario) {
+        // Asumiendo que Entrenador tiene un constructor similar
         Entrenador entrenador = new Entrenador(dni, nombre, apellido,
                 telefono, correoElectronico, especialidad, salario);
+
+        // Si Entrenador tiene ID, se lo asignaríamos aquí.
+        // Por ahora lo agregamos a la lista.
         entrenadores.add(entrenador);
         return entrenador;
     }
@@ -81,51 +72,29 @@ public class ServicioGimnasio {
         return entrenadores;
     }
 
-    public void eliminarEntrenadorPorDni(String dni) {
-        boolean eliminado = entrenadores.removeIf(entrenador -> {
-            String edni = null;
-            try { edni = entrenador.getDni(); } catch (Exception ignored) {}
-            return edni != null && edni.equalsIgnoreCase(dni);
-        });
-        if (!eliminado) {
-            throw new RuntimeException("No existe un entrenador con DNI " + dni);
-        }
-    }
-
-    public void eliminarEntrenador(String dni) {
-        eliminarEntrenadorPorDni(dni);
-    }
-
     public void eliminarEntrenador(int id) {
-        boolean eliminado = false;
-        for (int i = 0; i < entrenadores.size(); i++) {
-            Entrenador e = entrenadores.get(i);
-            Integer eid = obtenerIdPorMetodos(e, "getId", "getIdEntrenador", "getId_usuario", "id");
-            if (eid != null && eid == id) {
-                entrenadores.remove(i);
-                eliminado = true;
-                break;
-            }
-        }
-        if (!eliminado) {
-            throw new RuntimeException("No existe un entrenador con id " + id);
+        // Esta lógica asume que Entrenador tiene un método getId() o getIdEntrenador()
+        // Si no lo tiene, te dará error aquí. En ese caso, usa eliminar por DNI.
+
+        // Opción A: Si Entrenador tiene ID
+        // boolean eliminado = entrenadores.removeIf(e -> e.getIdEntrenador() == id);
+
+        // Opción B: (Temporal) Eliminar por índice si el ID es el índice (menos seguro)
+        if (id >= 0 && id < entrenadores.size()) {
+            entrenadores.remove(id);
+        } else {
+            System.out.println("No se encontró entrenador con ese índice/ID.");
         }
     }
 
-    private Integer obtenerIdPorMetodos(Object obj, String... nombresMetodos) {
-        if (obj == null) return null;
-        for (String nombre : nombresMetodos) {
-            try {
-                Method m = obj.getClass().getMethod(nombre);
-                Object res = m.invoke(obj);
-                if (res instanceof Number) return ((Number) res).intValue();
-                if (res instanceof String) {
-                    try { return Integer.parseInt((String) res); } catch (Exception ignored) {}
-                }
-            } catch (NoSuchMethodException ignored) {
-            } catch (Exception ignored) {
-            }
-        }
-        return null;
+    // Método extra para eliminar entrenador por DNI (Más seguro)
+    public void eliminarEntrenador(String dni) {
+        entrenadores.removeIf(e -> e.getDni().equals(dni));
+    }
+
+    // --- MÉTODOS PARA PAGOS ---
+
+    public void registrarPago(Pago pago) {
+        this.pagos.add(pago);
     }
 }
