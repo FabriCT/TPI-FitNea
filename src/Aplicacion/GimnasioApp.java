@@ -508,7 +508,7 @@ public class GimnasioApp {
         System.out.println("No se pudo eliminar el entrenador: no se encontró id interno ni método de eliminación por DNI en ServicioGimnasio.");
     }
 
-    // ======== REPORTES ========
+    // ======== Registrar pago de cuota ========
 
     private static void registrarPago() {
         System.out.println("\n--- Registrar Pago de Cuota ---");
@@ -523,37 +523,37 @@ public class GimnasioApp {
             return;
         }
 
-        double montoCuota = 0;
+        System.out.print("Ingrese el valor base de la cuota: ");
+        double valorBase = 0;
+
         try {
-            Method m = socio.getClass().getMethod("calcularCuota");
-            Object res = m.invoke(socio);
-            if (res instanceof Number) {
-                montoCuota = ((Number) res).doubleValue();
-            } else {
-                System.out.println("Advertencia: No se pudo calcular el monto.");
-                return;
-            }
+            valorBase = Double.parseDouble(entrada.nextLine());
         } catch (Exception e) {
-            System.out.println("Error al intentar calcular la cuota.");
+            System.out.println("Error: debe ingresar un número válido.");
             return;
         }
 
+        double montoCuota;
+
+        String tipo = socio.getTipoMembresia();
+
+        if (tipo.equalsIgnoreCase("REGULAR")) {
+            montoCuota = valorBase;
+        } else {
+            montoCuota = valorBase * 1.5;
+        }
+
+        System.out.println("Monto final de la cuota: " + new DecimalFormat("#0.00").format(montoCuota) + " $");
 
         System.out.print("Ingrese el mes a pagar (formato MM-AAAA): ");
         String mesIngresado = entrada.nextLine();
 
-        System.out.println("Cuota a pagar: " + new DecimalFormat("#0.00").format(montoCuota) + " $");
-
-
         int id = obtenerIdPorMetodos(socio, "getId", "getIdSocio");
 
         try {
-
             servicio.registrarPago(id, montoCuota, mesIngresado);
-
-            System.out.println("Pago del mes " + mesIngresado + " registrado exitosamente.");
-            System.out.println("El socio " + obtenerStringPorMetodos(socio, "getNombre", "nombre") + " está activo.");
-
+            System.out.println("Pago registrado correctamente.");
+            System.out.println("El socio " + socio.getNombre() + " pago su cuota.");
         } catch (Exception e) {
             System.out.println("Error al procesar el pago: " + e.getMessage());
         }
