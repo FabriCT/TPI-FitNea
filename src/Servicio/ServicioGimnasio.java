@@ -1,7 +1,7 @@
 package Servicio;
 
 import Modelo.Entrenador;
-import Modelo.Pago; // Asegúrate de que Pago.java exista en Modelo
+import Modelo.Pago;
 import Modelo.Socio;
 import Excepciones.ExcepcionSocioNoEncontrado;
 
@@ -12,22 +12,45 @@ import java.util.List;
 
 public class ServicioGimnasio {
 
-    private List<Socio> socios = new ArrayList<>();
-    private List<Entrenador> entrenadores = new ArrayList<>();
-    private List<Pago> pagos = new ArrayList<>(); // Lista para guardar los pagos
-
+    // --- ATRIBUTOS (Declarados una sola vez) ---
     private int siguienteIdSocio = 1;
+    private List<Socio> socios = new ArrayList<>();
+
     private int siguienteIdEntrenador = 1;
+    private List<Entrenador> entrenadores = new ArrayList<>();
+
+    private int siguienteIdPago = 1;
+    private List<Pago> pagos = new ArrayList<>();
+
+
+    // --- MÉTODOS AUXILIARES ---
+
+    public Socio buscarSocioPorId(int id) {
+        for (Socio s : socios) {
+            if (s.getIdSocio() == id) {
+                return s;
+            }
+        }
+        return null;
+    }
 
     // --- MÉTODOS PARA SOCIOS ---
 
     public Socio agregarSocio(String dni, String nombre, String apellido,
                               String telefono, String correoElectronico, String tipoMembresia) {
-
-        // Creamos el socio con ID automático
         Socio socio = new Socio(dni, nombre, apellido, telefono, correoElectronico,
                 siguienteIdSocio++, tipoMembresia, LocalDate.now(), true);
+        socios.add(socio);
+        return socio;
+    }
 
+    // Sobrecarga para cuando se pasan peso y altura (si lo usas)
+    public Socio agregarSocio(String dni, String nombre, String apellido,
+                              String telefono, String correoElectronico, String tipoMembresia, double peso, double altura) {
+        // Nota: Si tu constructor de Socio tiene peso y altura, úsalos aquí.
+        // Si no, usa el constructor estándar.
+        Socio socio = new Socio(dni, nombre, apellido, telefono, correoElectronico,
+                siguienteIdSocio++, tipoMembresia, LocalDate.now(), true);
         socios.add(socio);
         return socio;
     }
@@ -39,7 +62,6 @@ public class ServicioGimnasio {
         }
     }
 
-    // Método auxiliar para eliminar por DNI (usado por el menú)
     public void eliminarSocioPorDni(String dni) throws ExcepcionSocioNoEncontrado {
         boolean eliminado = socios.removeIf(s -> s.getDni().equals(dni));
         if (!eliminado) {
@@ -48,7 +70,6 @@ public class ServicioGimnasio {
     }
 
     public List<Socio> listarSocios() {
-        // Ordenamos por nombre (Socio implementa Comparable)
         Collections.sort(socios);
         return socios;
     }
@@ -58,12 +79,8 @@ public class ServicioGimnasio {
     public Entrenador agregarEntrenador(String dni, String nombre, String apellido,
                                         String telefono, String correoElectronico,
                                         String especialidad, double salario) {
-        // Asumiendo que Entrenador tiene un constructor similar
         Entrenador entrenador = new Entrenador(dni, nombre, apellido,
                 telefono, correoElectronico, especialidad, salario);
-
-        // Si Entrenador tiene ID, se lo asignaríamos aquí.
-        // Por ahora lo agregamos a la lista.
         entrenadores.add(entrenador);
         return entrenador;
     }
@@ -73,28 +90,45 @@ public class ServicioGimnasio {
     }
 
     public void eliminarEntrenador(int id) {
-        // Esta lógica asume que Entrenador tiene un método getId() o getIdEntrenador()
-        // Si no lo tiene, te dará error aquí. En ese caso, usa eliminar por DNI.
-
-        // Opción A: Si Entrenador tiene ID
-        // boolean eliminado = entrenadores.removeIf(e -> e.getIdEntrenador() == id);
-
-        // Opción B: (Temporal) Eliminar por índice si el ID es el índice (menos seguro)
         if (id >= 0 && id < entrenadores.size()) {
             entrenadores.remove(id);
-        } else {
-            System.out.println("No se encontró entrenador con ese índice/ID.");
         }
     }
 
-    // Método extra para eliminar entrenador por DNI (Más seguro)
     public void eliminarEntrenador(String dni) {
         entrenadores.removeIf(e -> e.getDni().equals(dni));
     }
 
     // --- MÉTODOS PARA PAGOS ---
 
-    public void registrarPago(Pago pago) {
-        this.pagos.add(pago);
+    /**
+     * Registra el pago, lo guarda en la lista y activa al socio.
+     */
+    public void registrarPago(int idSocio, double monto, String mesCorrespondiente) throws ExcepcionSocioNoEncontrado {
+
+        Socio socio = buscarSocioPorId(idSocio);
+
+        if (socio == null) {
+            throw new ExcepcionSocioNoEncontrado("Socio con ID " + idSocio + " no encontrado.");
+        }
+
+        // Creamos el pago usando el mes que recibimos por parámetro (mesCorrespondiente)
+        Pago nuevoPago = new Pago(
+                siguienteIdPago++,
+                socio,
+                LocalDate.now(), // La fecha real de la transacción sigue siendo HOY
+                monto,
+                mesCorrespondiente // Aquí guardamos "11-2025" o lo que escribiste
+        );
+
+        // Guardamos en la lista
+        this.pagos.add(nuevoPago);
+
+        // Activamos al socio
+        socio.setActivo(true);
+    }
+
+    public List<Pago> listarPagos() {
+        return pagos;
     }
 }
