@@ -39,6 +39,7 @@ public class GimnasioApp {
             case 1 -> menuSocios();
             case 2 -> menuEntrenadores();
             case 3 -> registrarPago();
+            case 4 -> menuReportes();
             case 0 -> {
                 System.out.println("Saliendo del sistema...");
                 return;
@@ -483,7 +484,6 @@ public class GimnasioApp {
 
         if (id != -1) {
             try {
-                // Llamada directa, sin vueltas
                 servicio.eliminarEntrenador(id);
                 System.out.println("Entrenador eliminado correctamente.");
             } catch (Exception ex) {
@@ -557,5 +557,68 @@ public class GimnasioApp {
         } catch (Exception e) {
             System.out.println("Error al procesar el pago: " + e.getMessage());
         }
+    }
+
+    private static void menuReportes() {
+        System.out.println("\n--- Reportes ---");
+        System.out.println("1. Ver membresías por vencer (en X días)");
+        System.out.println("2. Ver socios con mora (vencidos)");
+        System.out.println("3. Listar todos los socios activos");
+        System.out.println("0. Volver");
+        System.out.print("Opción: ");
+
+        int opcion = leerEnteroSeguro();
+
+        switch (opcion) {
+            case 1 -> verMembresiasPorVencer();
+            case 2 -> verMembresiasConMora();
+            case 3 -> listarSociosActivos();
+            case 0 -> { return; }
+            default -> System.out.println("Opción inválida.");
+        }
+        menuReportes();
+    }
+    private static void verMembresiasPorVencer() {
+        System.out.println("\n--- Membresías Próximas a Vencer ---");
+        System.out.print("Ingrese cantidad de días a proyectar (ej: 10): ");
+        int dias = leerEnteroSeguro();
+
+        List<Socio> lista = servicio.buscarMembresiasPorVencer(dias);
+
+        if (lista.isEmpty()) {
+            System.out.println("No hay membresías que venzan en los próximos " + dias + " días.");
+        } else {
+            System.out.println("Socios que vencen pronto:");
+            for (Socio s : lista) {
+                System.out.println(" - " + s.getNombre() + " " + s.getApellido() + " (Vence: " + s.getFechaVencimiento() + ")");
+            }
+        }
+    }
+
+    private static void verMembresiasConMora() {
+        System.out.println("\n--- Socios con Mora (Vencidos) ---");
+        List<Socio> lista = servicio.buscarSociosConMora();
+
+        if (lista.isEmpty()) {
+            System.out.println("¡Excelente! No hay socios con deuda.");
+        } else {
+            for (Socio s : lista) {
+                System.out.println(" - " + s.getNombre() + " " + s.getApellido() + " (Venció: " + s.getFechaVencimiento() + ")");
+            }
+        }
+    }
+
+    private static void listarSociosActivos() {
+        System.out.println("\n--- Socios Activos (Al día) ---");
+        List<Socio> lista = servicio.buscarSociosActivos();
+
+        if (lista.isEmpty()) {
+            System.out.println("No hay socios activos.");
+        } else {
+            for (Socio s : lista) {
+                System.out.println(" - " + s.getNombre() + " " + s.getApellido() + " (Plan: " + s.getTipoMembresia() + ")");
+            }
+        }
+    }
     }
 }

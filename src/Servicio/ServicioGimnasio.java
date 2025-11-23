@@ -74,6 +74,43 @@ public class ServicioGimnasio {
         return socios;
     }
 
+    public List<Socio> buscarMembresiasPorVencer(int dias) {
+        List<Socio> resultado = new ArrayList<>();
+        LocalDate hoy = LocalDate.now();
+        LocalDate limite = hoy.plusDays(dias);
+
+        for (Socio s : socios) {
+            LocalDate venc = s.getFechaVencimiento();
+            if (venc != null && !venc.isBefore(hoy) && !venc.isAfter(limite)) {
+                resultado.add(s);
+            }
+        }
+        return resultado;
+    }
+
+    public List<Socio> buscarSociosConMora() {
+        List<Socio> resultado = new ArrayList<>();
+        LocalDate hoy = LocalDate.now();
+
+        for (Socio s : socios) {
+            LocalDate venc = s.getFechaVencimiento();
+            if (venc != null && venc.isBefore(hoy)) {
+                resultado.add(s);
+            }
+        }
+        return resultado;
+    }
+
+    public List<Socio> buscarSociosActivos() {
+        List<Socio> resultado = new ArrayList<>();
+        for (Socio s : socios) {
+            if (s.isActivo() && s.tieneCuotaAlDia()) {
+                resultado.add(s);
+            }
+        }
+        return resultado;
+    }
+
     // --- MÉTODOS PARA ENTRENADORES ---
 
     public Entrenador agregarEntrenador(String dni, String nombre, String apellido,
@@ -123,6 +160,15 @@ public class ServicioGimnasio {
 
         // Guardamos en la lista
         this.pagos.add(nuevoPago);
+
+        socio.setActivo(true);
+        if (socio.getFechaVencimiento().isBefore(LocalDate.now())) {
+            // Si estaba vencido, vence en un mes desde hoy
+            socio.setFechaVencimiento(LocalDate.now().plusMonths(1));
+        } else {
+            // Si no estaba vencido, agregamos un mes a su fecha actual
+            socio.setFechaVencimiento(socio.getFechaVencimiento().plusMonths(1));
+        }
 
         // Activamos al socio
         socio.setActivo(true);
