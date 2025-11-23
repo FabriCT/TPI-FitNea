@@ -1,10 +1,11 @@
 package Servicio;
 
 import Modelo.Entrenador;
-import Modelo.Pago;
 import Modelo.Socio;
 import Excepciones.ExcepcionSocioNoEncontrado;
+import Modelo.*;
 
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,45 +13,24 @@ import java.util.List;
 
 public class ServicioGimnasio {
 
-    // --- ATRIBUTOS (Declarados una sola vez) ---
-    private int siguienteIdSocio = 1;
     private List<Socio> socios = new ArrayList<>();
-
-    private int siguienteIdEntrenador = 1;
     private List<Entrenador> entrenadores = new ArrayList<>();
-
-    private int siguienteIdPago = 1;
+    private List<ClaseGrupal> clasesGrupales = new ArrayList<>();
     private List<Pago> pagos = new ArrayList<>();
 
+    private String[][] grillaHorarios = new String[6][4];
 
-    // --- MÉTODOS AUXILIARES ---
+    private int siguienteIdSocio = 1;
+    private int siguienteIdClase = 1;
+    private int siguienteIdPago = 1;
 
-    public Socio buscarSocioPorId(int id) {
-        for (Socio s : socios) {
-            if (s.getIdSocio() == id) {
-                return s;
-            }
-        }
-        return null;
-    }
-
-    // --- MÉTODOS PARA SOCIOS ---
 
     public Socio agregarSocio(String dni, String nombre, String apellido,
-                              String telefono, String correoElectronico, String tipoMembresia) {
-        Socio socio = new Socio(dni, nombre, apellido, telefono, correoElectronico,
-                siguienteIdSocio++, tipoMembresia, LocalDate.now(), true);
-        socios.add(socio);
-        return socio;
-    }
+                              String telefono, String correoElectronico,
+                              String tipoMembresia, double peso, double altura) {
 
-    // Sobrecarga para cuando se pasan peso y altura (si lo usas)
-    public Socio agregarSocio(String dni, String nombre, String apellido,
-                              String telefono, String correoElectronico, String tipoMembresia, double peso, double altura) {
-        // Nota: Si tu constructor de Socio tiene peso y altura, úsalos aquí.
-        // Si no, usa el constructor estándar.
         Socio socio = new Socio(dni, nombre, apellido, telefono, correoElectronico,
-                siguienteIdSocio++, tipoMembresia, LocalDate.now(), true);
+                siguienteIdSocio++, tipoMembresia, LocalDate.now(), true, peso, altura);
         socios.add(socio);
         return socio;
     }
@@ -63,10 +43,25 @@ public class ServicioGimnasio {
     }
 
     public void eliminarSocioPorDni(String dni) throws ExcepcionSocioNoEncontrado {
-        boolean eliminado = socios.removeIf(s -> s.getDni().equals(dni));
+        boolean eliminado = socios.removeIf(socio -> {
+            String sdni = null;
+            try { sdni = socio.getDni(); } catch (Exception ignored) {}
+            return sdni != null && sdni.equalsIgnoreCase(dni);
+        });
         if (!eliminado) {
             throw new ExcepcionSocioNoEncontrado("No existe un socio con DNI " + dni);
         }
+    }
+
+    public void eliminarSocio(String dni) throws ExcepcionSocioNoEncontrado {
+        eliminarSocioPorDni(dni);
+    }
+
+    public Socio buscarSocioPorId(int idSocio) throws ExcepcionSocioNoEncontrado {
+        return socios.stream()
+                .filter(socio -> socio.getIdSocio() == idSocio)
+                .findFirst()
+                .orElseThrow(() -> new ExcepcionSocioNoEncontrado("Socio no encontrado."));
     }
 
     public List<Socio> listarSocios() {
@@ -74,7 +69,13 @@ public class ServicioGimnasio {
         return socios;
     }
 
-    // --- MÉTODOS PARA ENTRENADORES ---
+    public void modificarSocioPesoAltura(int idSocio, double nuevoPeso, double nuevaAltura)
+            throws ExcepcionSocioNoEncontrado {
+        Socio socio = buscarSocioPorId(idSocio);
+        socio.setPeso(nuevoPeso);
+        socio.setAltura(nuevaAltura);
+    }
+
 
     public Entrenador agregarEntrenador(String dni, String nombre, String apellido,
                                         String telefono, String correoElectronico,
@@ -89,46 +90,51 @@ public class ServicioGimnasio {
         return entrenadores;
     }
 
-    public void eliminarEntrenador(int id) {
-        if (id >= 0 && id < entrenadores.size()) {
-            entrenadores.remove(id);
+    public void eliminarEntrenadorPorDni(String dni) {
+        boolean eliminado = entrenadores.removeIf(entrenador -> {
+            String edni = null;
+            try { edni = entrenador.getDni(); } catch (Exception ignored) {}
+            return edni != null && edni.equalsIgnoreCase(dni);
+        });
+        if (!eliminado) {
+            throw new RuntimeException("No existe un entrenador con DNI " + dni);
         }
     }
 
     public void eliminarEntrenador(String dni) {
-        entrenadores.removeIf(e -> e.getDni().equals(dni));
+        eliminarEntrenadorPorDni(dni);
     }
 
-    // --- MÉTODOS PARA PAGOS ---
-
-    /**
-     * Registra el pago, lo guarda en la lista y activa al socio.
-     */
-    public void registrarPago(int idSocio, double monto, String mesCorrespondiente) throws ExcepcionSocioNoEncontrado {
-
-        Socio socio = buscarSocioPorId(idSocio);
-
-        if (socio == null) {
-            throw new ExcepcionSocioNoEncontrado("Socio con ID " + idSocio + " no encontrado.");
+    public void eliminarEntrenador(int id) {
+        boolean eliminado = false;
+        for (int i = 0; i < entrenadores.size(); i++) {
+            Entrenador e = entrenadores.get(i);
+            Integer eid = obtenerIdPorMetodos(e, "getId", "getIdEntrenador", "getId_usuario", "id");
+            if (eid != null && eid == id) {
+                entrenadores.remove(i);
+                eliminado = true;
+                break;
+            }
         }
-
-        // Creamos el pago usando el mes que recibimos por parámetro (mesCorrespondiente)
-        Pago nuevoPago = new Pago(
-                siguienteIdPago++,
-                socio,
-                LocalDate.now(), // La fecha real de la transacción sigue siendo HOY
-                monto,
-                mesCorrespondiente // Aquí guardamos "11-2025" o lo que escribiste
-        );
-
-        // Guardamos en la lista
-        this.pagos.add(nuevoPago);
-
-        // Activamos al socio
-        socio.setActivo(true);
+        if (!eliminado) {
+            throw new RuntimeException("No existe un entrenador con id " + id);
+        }
     }
 
-    public List<Pago> listarPagos() {
-        return pagos;
+    private Integer obtenerIdPorMetodos(Object obj, String... nombresMetodos) {
+        if (obj == null) return null;
+        for (String nombre : nombresMetodos) {
+            try {
+                Method m = obj.getClass().getMethod(nombre);
+                Object res = m.invoke(obj);
+                if (res instanceof Number) return ((Number) res).intValue();
+                if (res instanceof String) {
+                    try { return Integer.parseInt((String) res); } catch (Exception ignored) {}
+                }
+            } catch (NoSuchMethodException ignored) {
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 }
