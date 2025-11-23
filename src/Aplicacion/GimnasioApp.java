@@ -182,8 +182,7 @@ public class GimnasioApp {
         System.out.println("\n--- Gestión de socios ---");
         System.out.println("1. Agregar socio");
         System.out.println("2. Listar socios");
-        System.out.println("3. Modificar peso/altura de socio");
-        System.out.println("4. Eliminar socio");
+        System.out.println("3. Eliminar socio");
         System.out.println("0. Volver");
         System.out.print("Opción: ");
 
@@ -192,8 +191,7 @@ public class GimnasioApp {
         switch (opcion) {
             case 1 -> agregarSocio();
             case 2 -> listarSocios();
-            case 3 -> modificarSocio();
-            case 4 -> eliminarSocio();
+            case 3 -> eliminarSocio();
             case 0 -> { }
             default -> System.out.println("Opción inválida.");
         }
