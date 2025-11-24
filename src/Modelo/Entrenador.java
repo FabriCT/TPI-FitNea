@@ -5,13 +5,9 @@ public class Entrenador extends Persona {
     private String especialidad;
     private double salario;
 
-    public Entrenador() {
-    }
-
     public Entrenador(String dni, String nombre, String apellido,
-                      String telefono, String correoElectronico,
                       String especialidad, double salario) {
-        super(dni, nombre, apellido, telefono, correoElectronico);
+        super(dni, nombre, apellido);
         this.especialidad = especialidad;
         this.salario = salario;
     }

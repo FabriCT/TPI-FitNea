@@ -7,34 +7,25 @@ import java.util.Objects;
 
 public class Socio extends Persona implements Pagable, Comparable<Socio> {
 
-    private int idSocio;
-    private String tipoMembresia;
-    private LocalDate fechaAlta;
+    private final int idSocio;
+    private final String tipoMembresia;
     private LocalDate fechaVencimiento;
     private boolean activo;
     private Rutina rutina;
 
-    public Socio() {
-    }
 
-    public Socio(String dni, String nombre, String apellido, String telefono, String correoElectronico,
-                 int idSocio, String tipoMembresia, LocalDate fechaAlta,
+    public Socio(String dni, String nombre, String apellido,
+                 int idSocio, String tipoMembresia,
                  boolean activo) {
-        super(dni, nombre, apellido, telefono, correoElectronico);
+        super(dni, nombre, apellido);
         this.idSocio = idSocio;
         this.tipoMembresia = tipoMembresia;
-        this.fechaAlta = fechaAlta;
         this.activo = activo;
     }
 
     public int getIdSocio() { return idSocio; }
-    public void setIdSocio(int idSocio) { this.idSocio = idSocio; }
 
     public String getTipoMembresia() { return tipoMembresia; }
-    public void setTipoMembresia(String tipoMembresia) { this.tipoMembresia = tipoMembresia; }
-
-    public LocalDate getFechaAlta() { return fechaAlta; }
-    public void setFechaAlta(LocalDate fechaAlta) { this.fechaAlta = fechaAlta; }
 
     public LocalDate getFechaVencimiento() {return fechaVencimiento;}
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Rutina {
-    protected List<String> ejercicios;
+    private final List<String> ejercicios;
 
     public Rutina() {
         this.ejercicios = new ArrayList<>();
@@ -12,10 +12,6 @@ public abstract class Rutina {
 
     public void agregarEjercicio(String ejercicio) {
         this.ejercicios.add(ejercicio);
-    }
-
-    public List<String> getEjercicios() {
-        return ejercicios;
     }
 
     @Override
