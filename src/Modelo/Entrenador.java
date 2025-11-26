@@ -24,37 +24,20 @@ public class Entrenador extends Persona {
 
     public void setEspecialidad(String especialidad) {
         this.especialidad = especialidad;
-    }
-
-    public double getSalario() {
-        return salario;
-    }
-
-    public void setSalario(double salario) {
         this.salario = salario;
     }
 
-    public LocalTime getHoraEntrada() {
-        return horaEntrada;
-    }
+    public String getEspecialidad() { return especialidad; }
+    public void setEspecialidad(String especialidad) { this.especialidad = especialidad; }
 
-    public LocalTime getHoraSalida() {
-        return horaSalida;
-    }
+    public double getSalario() { return salario; }
+    public void setSalario(double salario) { this.salario = salario; }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Entrenador entrenador = (Entrenador) o;
-        return Double.compare(entrenador.salario, salario) == 0 &&
-                Objects.equals(getDni(), entrenador.getDni()) &&
-                Objects.equals(especialidad, entrenador.especialidad);
-    }
-
-    @Override
-    public int hashCode() {
-        // Incluimos los mismos campos que en el método equals
-        return Objects.hash(getDni(), especialidad, salario);
+    public String toString() {
+        return "Entrenador{" + super.toString() +
+                ", especialidad='" + especialidad + '\'' +
+                ", salario=" + salario +
+                '}';
     }
 }
