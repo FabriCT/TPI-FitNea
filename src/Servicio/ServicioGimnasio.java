@@ -1,10 +1,10 @@
 package Servicio;
 
+import Excepciones.ExcepcionSocioNoEncontrado;
 import Modelo.Entrenador;
 import Modelo.Pago;
-import Modelo.Socio;
 import Modelo.Rutina;
-import Excepciones.ExcepcionSocioNoEncontrado;
+import Modelo.Socio;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -32,10 +32,9 @@ public class ServicioGimnasio {
         return null;
     }
 
-    public Socio agregarSocio(String dni, String nombre, String apellido,
-                              String telefono, String correoElectronico, String tipoMembresia) {
-        Socio socio = new Socio(dni, nombre, apellido, telefono, correoElectronico,
-                siguienteIdSocio++, tipoMembresia, LocalDate.now(), false);
+    public Socio agregarSocio(String dni, String nombre, String apellido, String tipoMembresia) {
+        Socio socio = new Socio(dni, nombre, apellido,
+                siguienteIdSocio.getAndIncrement(), tipoMembresia, false);
         socios.add(socio);
         return socio;
     }
@@ -51,12 +50,45 @@ public class ServicioGimnasio {
         Collections.sort(socios);
         return socios;
     }
+    //------MEMBRESIAS------
+    public List<Socio> buscarMembresiasPorVencer(int dias) {
+        List<Socio> resultado = new ArrayList<>();
+        LocalDate hoy = LocalDate.now();
+        LocalDate limite = hoy.plusDays(dias);
 
-    public Entrenador agregarEntrenador(String dni, String nombre, String apellido,
-                                        String telefono, String correoElectronico,
-                                        String especialidad, double salario) {
-        Entrenador entrenador = new Entrenador(dni, nombre, apellido,
-                telefono, correoElectronico, especialidad, salario);
+        for (Socio s : socios) {
+            LocalDate venc = s.getFechaVencimiento();
+            if (venc != null && !venc.isBefore(hoy) && !venc.isAfter(limite)) {
+                resultado.add(s);
+            }
+        }
+        return resultado;
+    }
+
+    public List<Socio> buscarSociosConMora() {
+        List<Socio> resultado = new ArrayList<>();
+        LocalDate hoy = LocalDate.now();
+
+        for (Socio s : socios) {
+            LocalDate venc = s.getFechaVencimiento();
+            if (venc != null && venc.isBefore(hoy)) {
+                resultado.add(s);
+            }
+        }
+        return resultado;
+    }
+
+    public List<Socio> buscarSociosActivos() {
+        return socios.stream()
+                .filter(s -> s.isActivo() && s.tieneCuotaAlDia())
+                .toList();
+    }
+
+    // --- MÉTODOS PARA ENTRENADORES ---
+
+    public Entrenador agregarEntrenador(String dni, String nombre, String apellido, String especialidad, double salario) {
+        // Los horarios se definen por defecto al crear un entrenador desde aquí.
+        Entrenador entrenador = new Entrenador(dni, nombre, apellido, especialidad, salario, LocalTime.of(8, 0), LocalTime.of(18, 0));
         entrenadores.add(entrenador);
         return entrenador;
     }
@@ -65,10 +97,8 @@ public class ServicioGimnasio {
         return entrenadores;
     }
 
-    public void eliminarEntrenador(int id) {
-        if (id >= 0 && id < entrenadores.size()) {
-            entrenadores.remove(id);
-        }
+    public void eliminarEntrenador(String dni) {
+        entrenadores.removeIf(e -> e.getDni().equalsIgnoreCase(dni));
     }
 
     public void registrarPago(int idSocio, double monto, String mesCorrespondiente) throws ExcepcionSocioNoEncontrado {
@@ -76,9 +106,10 @@ public class ServicioGimnasio {
         if (socio == null) {
             throw new ExcepcionSocioNoEncontrado("Socio con ID " + idSocio + " no encontrado.");
         }
-        Pago nuevoPago = new Pago(siguienteIdPago++, socio, LocalDate.now(), monto, mesCorrespondiente);
+        Pago nuevoPago = new Pago(siguienteIdPago.getAndIncrement(), socio, LocalDate.now(), monto, mesCorrespondiente);
         this.pagos.add(nuevoPago);
         socio.setActivo(true);
+        socio.setFechaVencimiento(LocalDate.now().plusMonths(1));
     }
 
     public List<Pago> listarPagos() {

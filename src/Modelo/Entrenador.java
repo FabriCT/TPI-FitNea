@@ -1,7 +1,6 @@
 package Modelo;
 
 import java.time.LocalTime;
-import java.util.Objects;
 
 public class Entrenador extends Persona {
 
@@ -18,17 +17,21 @@ public class Entrenador extends Persona {
         this.horaSalida = horaSalida;
     }
 
+    public LocalTime getHoraSalida() {
+        return horaSalida;
+    }
+
+    public LocalTime getHoraEntrada() {
+        return horaEntrada;
+    }
+
     public String getEspecialidad() {
         return especialidad;
     }
 
     public void setEspecialidad(String especialidad) {
         this.especialidad = especialidad;
-        this.salario = salario;
     }
-
-    public String getEspecialidad() { return especialidad; }
-    public void setEspecialidad(String especialidad) { this.especialidad = especialidad; }
 
     public double getSalario() { return salario; }
     public void setSalario(double salario) { this.salario = salario; }

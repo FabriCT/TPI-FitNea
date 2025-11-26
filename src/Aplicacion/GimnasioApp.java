@@ -1,16 +1,10 @@
 package Aplicacion;
 
 import Excepciones.ExcepcionSocioNoEncontrado;
-import Modelo.Entrenador;
-import Modelo.Pago;
-import Modelo.Socio;
-import Modelo.Rutina;
-import Modelo.RutinaCardio;
-import Modelo.RutinaFuerza;
+import Modelo.*;
 import Servicio.ServicioGimnasio;
 
 import java.text.DecimalFormat;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Scanner;
 
@@ -21,6 +15,7 @@ public class GimnasioApp {
 
     private record InputResult(String value, boolean back) {
     }
+
     static void main(String... args) {
         boolean salir = false;
         while (!salir) {
@@ -51,21 +46,22 @@ public class GimnasioApp {
         System.out.println("5. Ver grilla de horarios");
         System.out.println("0. Salir");
         System.out.print("Seleccione una opción: ");
+    }
 
-        int opcion = leerEnteroSeguro();
-
-        switch (opcion) {
-            case 1 -> menuSocios();
-            case 2 -> menuEntrenadores();
-            case 3 -> registrarPago();
-            case 0 -> {
-                System.out.println("Saliendo del sistema...");
-                return;
-            }
-            default -> System.out.println("Opción inválida.");
+    private static void mostrarGrillaHorarios() {
+        System.out.println("\n--- Grilla de Horarios de Entrenadores ---");
+        List<Entrenador> entrenadores = servicio.listarEntrenadores();
+        if (entrenadores.isEmpty()) {
+            System.out.println("No hay entrenadores registrados para mostrar horarios.");
+            return;
         }
 
-        mostrarMenuPrincipal();
+        System.out.printf("%-25s %-20s %-15s%n", "Nombre Completo", "Especialidad", "Horario");
+        System.out.println("-".repeat(65));
+        for (Entrenador e : entrenadores) {
+            System.out.printf("%-25s %-20s %s - %s%n",
+                    e.getNombre() + " " + e.getApellido(), e.getEspecialidad(), e.getHoraEntrada(), e.getHoraSalida());
+        }
     }
 
     private static int leerEnteroSeguro() {
@@ -179,6 +175,7 @@ public class GimnasioApp {
         System.out.println("1. Agregar socio");
         System.out.println("2. Listar socios");
         System.out.println("3. Eliminar socio");
+        System.out.println("4. Consultar rutina de un socio");
         System.out.println("0. Volver");
         System.out.print("Opción: ");
 
@@ -188,6 +185,7 @@ public class GimnasioApp {
             case 1 -> agregarSocio();
             case 2 -> listarSocios();
             case 3 -> eliminarSocio();
+            case 4 -> consultarRutinaSocio();
             case 0 -> {
             }
             default -> System.out.println("Opción inválida.");
@@ -195,10 +193,10 @@ public class GimnasioApp {
     }
 
     private static void agregarSocio() {
-        String dni = "", nombre = "", apellido = "", telefono = "", email = "", tipoMembresia = "";
+        String dni = "", nombre = "", apellido = "", tipoMembresia = "";
         mostrarIndicacionVolver();
         int paso = 0;
-        while (paso < 6) {
+        while (paso < 4) {
             switch (paso) {
                 case 0 -> {
                     InputResult r = leerLineaSinHint("DNI:");
@@ -228,24 +226,6 @@ public class GimnasioApp {
                     paso++;
                 }
                 case 3 -> {
-                    InputResult r = leerLineaSinHint("Numero Telefonico:");
-                    if (r.back()) {
-                        paso--;
-                        continue;
-                    }
-                    telefono = r.value();
-                    paso++;
-                }
-                case 4 -> {
-                    InputResult r = leerLineaSinHint("Email:");
-                    if (r.back()) {
-                        paso--;
-                        continue;
-                    }
-                    email = r.value();
-                    paso++;
-                }
-                case 5 -> {
                     InputResult r = leerTipoMembresiaConVolver();
                     if (r.back()) {
                         paso--;
@@ -257,7 +237,7 @@ public class GimnasioApp {
             }
         }
         try {
-            Socio socio = servicio.agregarSocio(dni, nombre, apellido, telefono, email, tipoMembresia);
+            Socio socio = servicio.agregarSocio(dni, nombre, apellido, tipoMembresia);
             System.out.println("Socio: DNI: " + socio.getDni()
                     + ", Nombre Completo: " + socio.getNombre() + " " + socio.getApellido()
                     + ", Membresia: " + socio.getTipoMembresia()
@@ -302,6 +282,25 @@ public class GimnasioApp {
         }
     }
 
+    private static void consultarRutinaSocio() {
+        System.out.println("\n--- Consultar Rutina de Socio ---");
+        System.out.print("Ingrese DNI del socio: ");
+        String dni = entrada.nextLine();
+        Socio socio = buscarSocioPorDni(dni);
+
+        if (socio == null) {
+            System.out.println("No se encontró un socio con ese DNI.");
+            return;
+        }
+
+        if (socio.getRutina() == null) {
+            System.out.println("El socio " + socio.getNombre() + " " + socio.getApellido() + " no tiene una rutina asignada.");
+        } else {
+            System.out.println("Rutina de " + socio.getNombre() + " " + socio.getApellido() + ":");
+            System.out.println(socio.getRutina());
+        }
+    }
+
     private static void menuEntrenadores() {
         System.out.println("\n--- Gestión de entrenadores ---");
         System.out.println("1. Agregar entrenador");
@@ -327,11 +326,11 @@ public class GimnasioApp {
     }
 
     private static void agregarEntrenador() {
-        String dni = "", nombre = "", apellido = "", telefono = "", email = "", especialidad = "";
+        String dni = "", nombre = "", apellido = "", especialidad = "";
         double salario = 0.0;
         mostrarIndicacionVolver();
         int paso = 0;
-        while (paso < 7) {
+        while (paso < 5) {
             switch (paso) {
                 case 0 -> {
                     InputResult r = leerLineaSinHint("DNI:");
@@ -361,24 +360,6 @@ public class GimnasioApp {
                     paso++;
                 }
                 case 3 -> {
-                    InputResult r = leerLineaSinHint("Teléfono:");
-                    if (r.back()) {
-                        paso--;
-                        continue;
-                    }
-                    telefono = r.value();
-                    paso++;
-                }
-                case 4 -> {
-                    InputResult r = leerLineaSinHint("Email:");
-                    if (r.back()) {
-                        paso--;
-                        continue;
-                    }
-                    email = r.value();
-                    paso++;
-                }
-                case 5 -> {
                     InputResult r = leerLineaSinHint("Especialidad:");
                     if (r.back()) {
                         paso--;
@@ -387,7 +368,7 @@ public class GimnasioApp {
                     especialidad = r.value();
                     paso++;
                 }
-                case 6 -> {
+                case 4 -> {
                     InputResult r = leerSalarioConVolver();
                     if (r.back()) {
                         paso--;
@@ -398,7 +379,7 @@ public class GimnasioApp {
                 }
             }
         }
-        Entrenador entrenador = servicio.agregarEntrenador(dni, nombre, apellido, telefono, email, especialidad, salario);
+        Entrenador entrenador = servicio.agregarEntrenador(dni, nombre, apellido, especialidad, salario);
         DecimalFormat df = new DecimalFormat("#0.00");
         System.out.println("Entrenador: DNI: " + entrenador.getDni()
                 + ", Nombre Completo: " + entrenador.getNombre() + " " + entrenador.getApellido()
@@ -471,9 +452,8 @@ public class GimnasioApp {
             System.out.println("No se encontró el entrenador. Volviendo a gestión de entrenadores.");
             return;
         }
-        // Asumiendo que el ID del entrenador se puede obtener de alguna manera
-        // servicio.eliminarEntrenador(e.getId());
-        System.out.println("Funcionalidad de eliminar entrenador no implementada completamente.");
+        servicio.eliminarEntrenador(dni);
+        System.out.println("Entrenador " + e.getNombre() + " " + e.getApellido() + " eliminado correctamente.");
     }
 
     private static void crearYAsignarRutinaEntrenador() {
@@ -554,6 +534,94 @@ public class GimnasioApp {
             System.out.println("El socio " + socio.getNombre() + " está activo.");
         } catch (Exception e) {
             System.out.println("Error al procesar el pago: " + e.getMessage());
+        }
+    }
+
+    private static void menuReportes() {
+        boolean volver = false;
+        while (!volver) {
+            System.out.println("\n--- Reportes ---");
+            System.out.println("1. Ver membresías por vencer (en X días)");
+            System.out.println("2. Ver socios con mora (vencidos)");
+            System.out.println("3. Listar todos los socios activos");
+            System.out.println("4. Listar todos los pagos");
+            System.out.println("0. Volver");
+            System.out.print("Opción: ");
+
+            int opcion = leerEnteroSeguro();
+
+            switch (opcion) {
+                case 1 -> verMembresiasPorVencer();
+                case 2 -> verMembresiasConMora();
+                case 3 -> listarSociosActivos();
+                case 4 -> listarPagos();
+                case 0 -> volver = true;
+                default -> System.out.println("Opción inválida.");
+            }
+        }
+    }
+
+    private static void verMembresiasPorVencer() {
+        System.out.println("\n--- Membresías Próximas a Vencer ---");
+        System.out.print("Ingrese cantidad de días a proyectar (ej: 10): ");
+        int dias = leerEnteroSeguro();
+
+        List<Socio> lista = servicio.buscarMembresiasPorVencer(dias);
+
+        if (lista.isEmpty()) {
+            System.out.println("No hay membresías que venzan en los próximos " + dias + " días.");
+        } else {
+            System.out.printf("%-25s %-15s%n", "Socio", "Fecha Vencimiento");
+            System.out.println("-".repeat(42));
+            for (Socio s : lista) {
+                System.out.printf("%-25s %-15s%n", s.getNombre() + " " + s.getApellido(), s.getFechaVencimiento());
+            }
+        }
+    }
+
+    private static void verMembresiasConMora() {
+        System.out.println("\n--- Socios con Mora (Vencidos) ---");
+        List<Socio> lista = servicio.buscarSociosConMora();
+
+        if (lista.isEmpty()) {
+            System.out.println("¡Excelente! No hay socios con deuda.");
+        } else {
+            System.out.printf("%-25s %-15s%n", "Socio", "Fecha Vencimiento");
+            System.out.println("-".repeat(42));
+            for (Socio s : lista) {
+                System.out.printf("%-25s %-15s%n", s.getNombre() + " " + s.getApellido(), s.getFechaVencimiento());
+            }
+        }
+    }
+
+    private static void listarSociosActivos() {
+        System.out.println("\n--- Socios Activos (Al día) ---");
+        List<Socio> lista = servicio.buscarSociosActivos();
+
+        if (lista.isEmpty()) {
+            System.out.println("No hay socios activos.");
+        } else {
+            System.out.printf("%-25s %-15s%n", "Socio", "Plan de Membresía");
+            System.out.println("-".repeat(43));
+            for (Socio s : lista) {
+                System.out.printf("%-25s %-15s%n", s.getNombre() + " " + s.getApellido(), s.getTipoMembresia());
+            }
+        }
+    }
+
+    private static void listarPagos() {
+        System.out.println("\n--- Historial de Pagos ---");
+        List<Pago> pagos = servicio.listarPagos();
+        if (pagos.isEmpty()) {
+            System.out.println("No hay pagos registrados.");
+        } else {
+            System.out.printf("%-25s %-15s %-15s %-15s%n", "Socio", "Fecha Pago", "Mes Pagado", "Monto");
+            System.out.println("-".repeat(75));
+            DecimalFormat df = new DecimalFormat("#0.00");
+            for (Pago p : pagos) {
+                System.out.printf("%-25s %-15s %-15s %-15s%n",
+                        p.socio().getNombre() + " " + p.socio().getApellido(), p.fechaPago(), p.mesCorrespondiente(), "$" + df.format(p.monto()));
+            }
         }
     }
 }
