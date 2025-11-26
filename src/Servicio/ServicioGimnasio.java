@@ -1,12 +1,13 @@
 package Servicio;
 
+import Excepciones.ExcepcionSocioNoEncontrado;
 import Modelo.Entrenador;
 import Modelo.Pago;
-import Modelo.Socio;
 import Modelo.Rutina;
-import Excepciones.ExcepcionSocioNoEncontrado;
+import Modelo.Socio;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,10 +24,12 @@ public class ServicioGimnasio {
     private final List<Pago> pagos = new ArrayList<>();
 
     public Socio buscarSocioPorId(int id) {
-        return socios.stream()
-                .filter(s -> s.getIdSocio() == id)
-                .findFirst()
-                .orElse(null);
+        for (Socio s : socios) {
+            if (s.getIdSocio() == id) {
+                return s;
+            }
+        }
+        return null;
     }
 
     public Socio agregarSocio(String dni, String nombre, String apellido, String tipoMembresia) {
@@ -83,15 +86,15 @@ public class ServicioGimnasio {
 
     // --- MÉTODOS PARA ENTRENADORES ---
 
-    public Entrenador agregarEntrenador(String dni, String nombre, String apellido,
-                                        String especialidad, double salario) {
-        Entrenador entrenador = new Entrenador(dni, nombre, apellido, especialidad, salario);
+    public Entrenador agregarEntrenador(String dni, String nombre, String apellido, String especialidad, double salario) {
+        // Los horarios se definen por defecto al crear un entrenador desde aquí.
+        Entrenador entrenador = new Entrenador(dni, nombre, apellido, especialidad, salario, LocalTime.of(8, 0), LocalTime.of(18, 0));
         entrenadores.add(entrenador);
         return entrenador;
     }
 
     public List<Entrenador> listarEntrenadores() {
-        return new ArrayList<>(entrenadores);
+        return entrenadores;
     }
 
     public void eliminarEntrenador(String dni) {
@@ -103,19 +106,18 @@ public class ServicioGimnasio {
         if (socio == null) {
             throw new ExcepcionSocioNoEncontrado("Socio con ID " + idSocio + " no encontrado.");
         }
-        LocalDate fechaPago = LocalDate.now();
-        Pago nuevoPago = new Pago(siguienteIdPago.getAndIncrement(), socio, fechaPago, monto, mesCorrespondiente);
+        Pago nuevoPago = new Pago(siguienteIdPago.getAndIncrement(), socio, LocalDate.now(), monto, mesCorrespondiente);
         this.pagos.add(nuevoPago);
         socio.setActivo(true);
-        socio.setFechaVencimiento(fechaPago.plusMonths(1));
+        socio.setFechaVencimiento(LocalDate.now().plusMonths(1));
     }
 
     public List<Pago> listarPagos() {
-        return new ArrayList<>(pagos);
+        return pagos;
     }
 
     public void asignarRutinaSocio(String dniSocio, Rutina rutina) throws ExcepcionSocioNoEncontrado {
-        Socio socio = socios.stream()
+        Socio socio = listarSocios().stream()
                 .filter(s -> s.getDni().equals(dniSocio))
                 .findFirst()
                 .orElseThrow(() -> new ExcepcionSocioNoEncontrado("No se encontró un socio con el DNI proporcionado."));
