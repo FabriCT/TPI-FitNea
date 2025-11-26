@@ -1,9 +1,9 @@
 package Modelo;
 
 public class RutinaFuerza extends Rutina {
-    private int series;
-    private int repeticiones;
-    private double peso; // en kg
+    private final int series;
+    private final int repeticiones;
+    private final double peso; // en kg
 
     public RutinaFuerza(int series, int repeticiones, double peso) {
         super();

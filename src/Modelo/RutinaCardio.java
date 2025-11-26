@@ -1,8 +1,8 @@
 package Modelo;
 
 public class RutinaCardio extends Rutina {
-    private int duracion; // en minutos
-    private int frecuenciaCardiaca; // en ppm
+    private final int duracion; // en minutos
+    private final int frecuenciaCardiaca; // en ppm
 
     public RutinaCardio(int duracion, int frecuenciaCardiaca) {
         super();
