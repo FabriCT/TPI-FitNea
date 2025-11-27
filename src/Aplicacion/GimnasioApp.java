@@ -5,6 +5,8 @@ import Modelo.*;
 import Servicio.ServicioGimnasio;
 
 import java.text.DecimalFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -16,7 +18,7 @@ public class GimnasioApp {
     private record InputResult(String value, boolean back) {
     }
 
-    static void main(String... args) {
+    public static void main(String[] args) {
         boolean salir = false;
         while (!salir) {
             mostrarMenuPrincipal();
@@ -49,19 +51,31 @@ public class GimnasioApp {
     }
 
     private static void mostrarGrillaHorarios() {
-        System.out.println("\n--- Grilla de Horarios de Entrenadores ---");
-        List<Entrenador> entrenadores = servicio.listarEntrenadores();
-        if (entrenadores.isEmpty()) {
-            System.out.println("No hay entrenadores registrados para mostrar horarios.");
-            return;
-        }
+        System.out.println("\n===== HORARIOS SEMANALES =====");
 
-        System.out.printf("%-25s %-20s %-15s%n", "Nombre Completo", "Especialidad", "Horario");
-        System.out.println("-".repeat(65));
-        for (Entrenador e : entrenadores) {
-            System.out.printf("%-25s %-20s %s - %s%n",
-                    e.getNombre() + " " + e.getApellido(), e.getEspecialidad(), e.getHoraEntrada(), e.getHoraSalida());
+        String[][] horarioSemanal = {
+                {"08:00", "Crossfit", "Musculación", "Crossfit", "Musculación", "Libre"},
+                {"10:00", "Zumba", "Pilates", "Zumba", "Pilates", "Yoga"},
+                {"16:00", "Funcional", "Boxeo", "Funcional", "Boxeo", "Funcional"},
+                {"19:00", "Pesas", "Cardio", "Pesas", "Cardio", "Pesas"}
+        };
+
+        String[] dias = {"HORA", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES"};
+
+        for (String dia : dias) System.out.printf("%-12s", dia);
+        System.out.println("\n" + "-".repeat(75));
+
+        for (int i = 0; i < horarioSemanal.length; i++) {
+            for (int j = 0; j < horarioSemanal[i].length; j++) {
+                System.out.printf("%-12s", horarioSemanal[i][j]);
+            }
+            System.out.println();
         }
+    }
+
+    private static int calcularDescuentoRecursivo(int anios) {
+        if (anios <= 0) return 0;
+        return 5 + calcularDescuentoRecursivo(anios - 1);
     }
 
     private static int leerEnteroSeguro() {
@@ -103,6 +117,19 @@ public class GimnasioApp {
         String line = entrada.nextLine();
         if (line.equalsIgnoreCase("V")) return new InputResult("", true);
         return new InputResult(line, false);
+    }
+
+    private static InputResult leerHoraConVolver(String prompt) {
+        while (true) {
+            InputResult r = leerLineaSinHint(prompt);
+            if (r.back()) return r;
+            try {
+                LocalTime.parse(r.value());
+                return r;
+            } catch (DateTimeParseException e) {
+                System.out.println("Formato de hora inválido. Use HH:mm (ej: 09:00).");
+            }
+        }
     }
 
     private static InputResult leerSalarioConVolver() {
@@ -328,9 +355,10 @@ public class GimnasioApp {
     private static void agregarEntrenador() {
         String dni = "", nombre = "", apellido = "", especialidad = "";
         double salario = 0.0;
+        LocalTime horaEntrada = null, horaSalida = null;
         mostrarIndicacionVolver();
         int paso = 0;
-        while (paso < 5) {
+        while (paso < 7) {
             switch (paso) {
                 case 0 -> {
                     InputResult r = leerLineaSinHint("DNI:");
@@ -377,14 +405,33 @@ public class GimnasioApp {
                     salario = Double.parseDouble(r.value());
                     paso++;
                 }
+                case 5 -> {
+                    InputResult r = leerHoraConVolver("Hora de entrada (HH:mm):");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    horaEntrada = LocalTime.parse(r.value());
+                    paso++;
+                }
+                case 6 -> {
+                    InputResult r = leerHoraConVolver("Hora de salida (HH:mm):");
+                    if (r.back()) {
+                        paso--;
+                        continue;
+                    }
+                    horaSalida = LocalTime.parse(r.value());
+                    paso++;
+                }
             }
         }
-        Entrenador entrenador = servicio.agregarEntrenador(dni, nombre, apellido, especialidad, salario);
+        Entrenador entrenador = servicio.agregarEntrenador(dni, nombre, apellido, especialidad, salario, horaEntrada, horaSalida);
         DecimalFormat df = new DecimalFormat("#0.00");
         System.out.println("Entrenador: DNI: " + entrenador.getDni()
                 + ", Nombre Completo: " + entrenador.getNombre() + " " + entrenador.getApellido()
                 + ", Especialidad: " + entrenador.getEspecialidad()
-                + ", Salario: " + df.format(entrenador.getSalario()) + " $");
+                + ", Salario: " + df.format(entrenador.getSalario()) + " $"
+                + ", Horario: " + entrenador.getHoraEntrada() + " - " + entrenador.getHoraSalida());
     }
 
     private static void listarEntrenadores() {
@@ -542,9 +589,11 @@ public class GimnasioApp {
         while (!volver) {
             System.out.println("\n--- Reportes ---");
             System.out.println("1. Ver membresías por vencer (en X días)");
-            System.out.println("2. Ver socios con mora (vencidos)");
+            System.out.println("2. Ver socios con cuota vencida");
             System.out.println("3. Listar todos los socios activos");
             System.out.println("4. Listar todos los pagos");
+            System.out.println("5. Ver Log de Acciones");
+            System.out.println("6. Simular descuento por antigüedad");
             System.out.println("0. Volver");
             System.out.print("Opción: ");
 
@@ -555,6 +604,13 @@ public class GimnasioApp {
                 case 2 -> verMembresiasConMora();
                 case 3 -> listarSociosActivos();
                 case 4 -> listarPagos();
+                case 5 -> servicio.verHistorialAcciones();
+                case 6 -> {
+                    System.out.print("Ingrese años de antigüedad para simular: ");
+                    int anios = leerEnteroSeguro();
+                    int descuento = calcularDescuentoRecursivo(anios);
+                    System.out.println("Descuento del: " + descuento + "%");
+                }
                 case 0 -> volver = true;
                 default -> System.out.println("Opción inválida.");
             }

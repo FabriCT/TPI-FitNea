@@ -5,6 +5,7 @@ import Modelo.Entrenador;
 import Modelo.Pago;
 import Modelo.Rutina;
 import Modelo.Socio;
+import Utilidades.ListaEnlazadaLog;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -23,6 +24,8 @@ public class ServicioGimnasio {
     private final AtomicInteger siguienteIdPago = new AtomicInteger(1);
     private final List<Pago> pagos = new ArrayList<>();
 
+    private final ListaEnlazadaLog<String> historialAcciones = new ListaEnlazadaLog<>();
+
     public Socio buscarSocioPorId(int id) {
         for (Socio s : socios) {
             if (s.getIdSocio() == id) {
@@ -36,6 +39,9 @@ public class ServicioGimnasio {
         Socio socio = new Socio(dni, nombre, apellido,
                 siguienteIdSocio.getAndIncrement(), tipoMembresia, false);
         socios.add(socio);
+
+        historialAcciones.agregar("Nuevo socio registrado: " + nombre + " " + apellido + " (DNI: " + dni + ")");
+
         return socio;
     }
 
@@ -50,7 +56,7 @@ public class ServicioGimnasio {
         Collections.sort(socios);
         return socios;
     }
-    //------MEMBRESIAS------
+
     public List<Socio> buscarMembresiasPorVencer(int dias) {
         List<Socio> resultado = new ArrayList<>();
         LocalDate hoy = LocalDate.now();
@@ -84,11 +90,9 @@ public class ServicioGimnasio {
                 .toList();
     }
 
-    // --- MÉTODOS PARA ENTRENADORES ---
 
-    public Entrenador agregarEntrenador(String dni, String nombre, String apellido, String especialidad, double salario) {
-        // Los horarios se definen por defecto al crear un entrenador desde aquí.
-        Entrenador entrenador = new Entrenador(dni, nombre, apellido, especialidad, salario, LocalTime.of(8, 0), LocalTime.of(18, 0));
+    public Entrenador agregarEntrenador(String dni, String nombre, String apellido, String especialidad, double salario, LocalTime horaEntrada, LocalTime horaSalida) {
+        Entrenador entrenador = new Entrenador(dni, nombre, apellido, especialidad, salario, horaEntrada, horaSalida);
         entrenadores.add(entrenador);
         return entrenador;
     }
@@ -110,6 +114,8 @@ public class ServicioGimnasio {
         this.pagos.add(nuevoPago);
         socio.setActivo(true);
         socio.setFechaVencimiento(LocalDate.now().plusMonths(1));
+
+        historialAcciones.agregar("Pago registrado: Socio ID " + idSocio + ", Monto: $" + monto);
     }
 
     public List<Pago> listarPagos() {
@@ -122,5 +128,9 @@ public class ServicioGimnasio {
                 .findFirst()
                 .orElseThrow(() -> new ExcepcionSocioNoEncontrado("No se encontró un socio con el DNI proporcionado."));
         socio.setRutina(rutina);
+    }
+
+    public void verHistorialAcciones() {
+        historialAcciones.mostrarLog();
     }
 }
