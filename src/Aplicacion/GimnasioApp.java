@@ -16,7 +16,7 @@ public class GimnasioApp {
     private record InputResult(String value, boolean back) {
     }
 
-    static void main(String... args) {
+    public static void main(String[] args) {
         boolean salir = false;
         while (!salir) {
             mostrarMenuPrincipal();
