@@ -41,7 +41,7 @@ public class Socio extends Persona implements Pagable, Comparable<Socio> {
     @Override
     public double calcularCuota() {
         double cuotaBase = 30000.0;
-        if ("PREMIUM".equalsIgnoreCase(tipoMembresia)) {
+        if ("COMPLETA".equalsIgnoreCase(tipoMembresia)) {
             cuotaBase = cuotaBase * 1.5;
         }
         return cuotaBase;
